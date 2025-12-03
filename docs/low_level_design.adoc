@@ -1,0 +1,32 @@
+= Low Level Design
+Long Nguyen Hoang <nghlong3004@gmail.com>
+v2.0, 2025-12
+:sectnums:
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+'''
+
+[small]
+====
+Author: {author} +
+Email: {email} +
+
+Version: {revnumber} ({revdate})
+====
+
+== Details Code
+
+
+
+== Design Patterns Mapping
+
+=== Command Pattern
+
+*Use-case*: xử lý hành động của người chơi.
+
+=== Strategy Pattern
+
+
+=== State Pattern
