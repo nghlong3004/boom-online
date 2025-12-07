@@ -8,7 +8,9 @@ package com.vn.nghlong3004.client.constant;
  */
 public final class ImageConstant {
 
-  public static String IMAGE_TITLE = "/images/tile_image.png";
+  public static final String IMAGE_TITLE = "/images/tile_image.png";
   public static final String BUTTON = "/images/buttons/button.png";
   public static final String BUTTON_TOUCH = "/images/buttons/button_touch.png";
+  public static final String BUTTON_GOOGLE = "/images/buttons/google.png";
+  public static final String WELCOME_BACKGROUND = "/images/background/welcome.jpg";
 }

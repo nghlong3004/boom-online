@@ -4,14 +4,17 @@ import static com.vn.nghlong3004.client.constant.GameConstant.*;
 
 import com.vn.nghlong3004.client.game.GameContext;
 import com.vn.nghlong3004.client.game.GamePanel;
+import com.vn.nghlong3004.client.util.NotificationUtil;
 import com.vn.nghlong3004.client.view.ButtonAdapter;
 import com.vn.nghlong3004.client.view.CustomModalBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import javax.swing.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import raven.modal.ModalDialog;
+import raven.modal.Toast;
 import raven.modal.option.Option;
 
 /**
@@ -27,6 +30,7 @@ public class WelcomeState implements GameState {
   private final CustomModalBorder loginPanel;
   private final Option option;
   private final ButtonAdapter buttonAdapter;
+  private final BufferedImage background;
 
   @Override
   public void previous(GameContext gameContext) {}
@@ -38,11 +42,13 @@ public class WelcomeState implements GameState {
   public void print() {
     if (!ModalDialog.isIdExist(loginPanel.toString())) {
       ModalDialog.showModal(gamePanel, loginPanel, option, loginPanel.toString());
+      NotificationUtil.getInstance().show(gamePanel, Toast.Type.INFO, "Login");
     }
   }
 
   @Override
   public void render(Graphics g) {
+    g.drawImage(background, 0, 0, GAME_WIDTH, GAME_HEIGHT, null);
     if (!ModalDialog.isIdExist(loginPanel.toString())) {
       buttonAdapter.render(g);
     }

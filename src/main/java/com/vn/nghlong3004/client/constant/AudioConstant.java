@@ -6,7 +6,7 @@ package com.vn.nghlong3004.client.constant;
  * @author nghlong3004
  * @since 12/6/2025
  */
-public class AudioConstant {
+public final class AudioConstant {
   public static int MENU = 5;
   public static int GAME = 6;
   public static int ONLINE = 7;
