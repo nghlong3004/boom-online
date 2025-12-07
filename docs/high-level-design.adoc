@@ -1,0 +1,157 @@
+= High Level Design
+Long Nguyen Hoang <nghlong3004@gmail.com>
+v2.0, 2025-12
+:sectnums:
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+'''
+
+[small]
+====
+Author: {author} +
+Email: {email} +
+
+Version: {revnumber} ({revdate})
+====
+
+== System Overview
+
+* **Mục đích:** Server đóng vai trò trung tâm, chịu trách nhiệm lưu trữ dữ liệu người chơi, xác thực, và Real-time
+* **Mô hình: Client-Server **
+* ** Framework: Spring Boot 4.0.0 (Java 21) **
+* ** Database: PostgreSQL 17 **
+* ** Database Migration: Flyway**
+* ** Security: Spring Security and JWT**
+
+== Server Architecture
+
+* Controller:
+
+** RestController: Nhận HTTP Request.
+
+** WebSocketHandler: Nhận kết nối socket.
+
+* Service:
+
+** Xử lý logic nghiệp vụ.
+
+* Repository:
+
+** Giao tiếp trực tiếp với PostgreSQL qua JPA.
+
+image::images/server-architecture.png[]
+
+== Requirements
+.Functional Requirements
+[cols="1, 3"]
+|===
+|Function | Short Description
+
+|Connection
+|Kết nối người chơi với server qua WebSocket.
+
+|Disconnection
+|Người chơi ngắt kết nối với Server.
+
+|Create Room
+|Người chơi tạo phòng mới.
+
+|Rooms
+|Lấy danh sách các phòng hiện có.
+
+|Join Room
+|Người chơi tham gia vào phòng.
+
+|Leave Room
+|Người chơi rời khỏi phòng.
+
+|Chat Message
+|Người chơi gửi tin nhắn trong phòng chờ.
+
+|Update Map, Skin, Ready
+|Người chơi thay đổi skin, map và trạng thái sẵn sàng.
+
+|Start Game
+|Chủ phòng bắt đầu ván đấu.
+
+|Bomber Action
+|Xử lý hành động di chuyển, đặt bom của người chơi.
+|===
+
+.Non-Functional Requirements
+[cols="1,3"]
+|===
+|Category | Requirement
+
+|Hashing Password
+|Brcypt
+|===
+
+== Key Components
+=== Authentication Module
+* Xác thực: Đăng ký, đăng nhập, quên mật khẩu, logout
+
+=== Game Room Module
+* Room: Đại diện cho 1 phòng chơi. Bao gồm số người trong phòng, trạng thái map.
+* Find Room: Tìm tất cả phòng (pagination)
+* Join Room: Vào 1 phòng bất kì chưa full người.
+* Leave Room: Rời khỏi 1 phòng
+* Create Room: Tạo 1 phòng mới
+
+=== WebSocket
+* Người chơi hoặc hệ thống gửi thông báo/trò truyện trong 1 Room
+* Người chơi làm 1 hành động nào đấy
+
+== Database Design
+* RDBMS (PostgreSQL): Bomber, History
+* In-Memory: Map<String, Room> Danh sách các phòng hiện có.
+
+== API & Protocol Spec
+=== HTTP RESTful API
+- POST api/v1/auth/login
+- POST api/v1/auth/register
+- POST api/v1/auth/forgot-password
+- POST api/v1/auth/logout
+- GET  api/v1/rooms?limit=5&offset=0
+- POST api/v1/rooms
+
+=== WebSocket
+==== Connection Handshake
+* **url-format**: ws://host:port/ws/game?token={JWT_TOKEN}&room={ROOM_ID}
+* room: ID phòng muốn vào
+
+* token: Để Server biết ai đang kết nối
+
+==== Packet Structure
+[source, json]
+----
+{
+  "t": "MOVE",
+  "p": "80"
+}
+----
+
+==== Client Requests
+1. Trong sảnh (Lobby)
+|===
+| type (t) | payload (p) | description
+
+| READY | "p": "true" or "false" | 1 Người chơi sẵn sàng (game Start khi ai cũng sẵn sàng)
+| START | "p": "" | Bắt đầu vào game
+| CHAT | "p": "Hello" | Chat trong phòng
+| LEAVE | "p": "" | Một người chơi rời phòng
+|===
+
+2. Trong trận (In game)
+|===
+| type (t) | payload (p) | description
+| ACTION | "p": "80" | Mã KeyEvent của phím
+|===
+
+
+== Sequence Flows
+1. Authentication Flow
+
+image::images/authentication-flow.jpg[]
