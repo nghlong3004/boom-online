@@ -24,6 +24,7 @@ public class LoginPanel extends FormPanel {
   private JTextField txtUsername;
   private JPasswordField txtPassword;
   @Setter private CustomModalBorder registerPanel;
+  @Setter private CustomModalBorder forgotPasswordPanel;
 
   public LoginPanel() {
     init();
@@ -120,6 +121,18 @@ public class LoginPanel extends FormPanel {
                     this,
                     Toast.Type.INFO,
                     LanguageUtil.getInstance().getString("register_button_register"));
+          }
+        });
+    cmdForgotPassword.addActionListener(
+        e -> {
+          if (forgotPasswordPanel != null) {
+            ModalDialog.pushModal(
+                forgotPasswordPanel, ApplicationConfiguration.getInstance().getLoginId());
+            NotificationUtil.getInstance()
+                .show(
+                    this,
+                    Toast.Type.INFO,
+                    LanguageUtil.getInstance().getString("forgot_password_title"));
           }
         });
   }

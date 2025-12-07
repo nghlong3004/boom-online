@@ -42,7 +42,13 @@ public final class GameStateFactory {
     CustomModalBorder loginPanel = new CustomModalBorder(login, "Sign In", icon);
     icon = "images/register.svg";
     CustomModalBorder registerPanel = new CustomModalBorder(new RegisterPanel(), "Sign Up", icon);
+
+    icon = "images/forgot_password.svg";
+    CustomModalBorder forgotPasswordPanel =
+        new CustomModalBorder(new ForgotPasswordPanel(), "Forgot Password", icon);
+
     login.setRegisterPanel(registerPanel);
+    login.setForgotPasswordPanel(forgotPasswordPanel);
     int x = GAME_WIDTH - MENU_BUTTON_WIDTH >>> 1;
     int y = GAME_HEIGHT - MENU_BUTTON_HEIGHT >>> 1;
     ButtonAdapter buttonAdapter =
@@ -51,7 +57,6 @@ public final class GameStateFactory {
     return WelcomeState.builder()
         .gamePanel(gamePanel)
         .loginPanel(loginPanel)
-        .registerPanel(registerPanel)
         .option(option)
         .buttonAdapter(buttonAdapter)
         .background(background)

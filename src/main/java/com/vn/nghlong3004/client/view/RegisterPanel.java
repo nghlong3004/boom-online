@@ -186,7 +186,6 @@ public class RegisterPanel extends FormPanel {
                   Toast.Type.INFO,
                   LanguageUtil.getInstance().getString("login_button_login"));
           ModalDialog.popModel(ApplicationConfiguration.getInstance().getLoginId());
-          ModalDialog.popModel(ApplicationConfiguration.getInstance().getLoginId());
         });
     cmdSignUp.addActionListener(
         actionEvent -> {

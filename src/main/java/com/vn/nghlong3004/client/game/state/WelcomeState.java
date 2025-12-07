@@ -30,7 +30,6 @@ import raven.modal.option.Option;
 public class WelcomeState implements GameState {
   private final GamePanel gamePanel;
   private final CustomModalBorder loginPanel;
-  private final CustomModalBorder registerPanel;
   private final Option option;
   private final ButtonAdapter buttonAdapter;
   private final BufferedImage background;

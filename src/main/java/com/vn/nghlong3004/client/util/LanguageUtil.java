@@ -34,6 +34,7 @@ public class LanguageUtil {
 
   public String getString(String key) {
     try {
+      System.out.println(key);
       return resourceBundle.getString(key);
     } catch (Exception e) {
       return "Key not found: " + key;
