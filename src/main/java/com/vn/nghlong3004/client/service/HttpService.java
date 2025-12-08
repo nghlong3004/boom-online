@@ -2,6 +2,9 @@ package com.vn.nghlong3004.client.service;
 
 import com.google.gson.Gson;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
+import com.vn.nghlong3004.client.constant.APIConstant;
+import com.vn.nghlong3004.client.constant.MediaTypeConstant;
+import com.vn.nghlong3004.client.model.request.LoginRequest;
 import com.vn.nghlong3004.client.model.request.RegisterRequest;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -26,31 +29,51 @@ public class HttpService {
   }
 
   public CompletableFuture<String> sendRegisterRequest(RegisterRequest registerRequest) {
-    log.info("Initiating registration request for email: {}", registerRequest.email());
+    String url = BASE_URL + APIConstant.REGISTER;
+    log.info("Initiating registration to URL: {}", url);
 
     String jsonBody = gson.toJson(registerRequest);
 
     HttpRequest request =
         HttpRequest.newBuilder()
-            .uri(URI.create(BASE_URL + "/auth/register"))
-            .header("Content-Type", "application/json")
+            .uri(URI.create(url))
+            .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
             .build();
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(
-            response -> {
-              int statusCode = response.statusCode();
-              log.info("Received response for registration. Status Code: {}", statusCode);
+        .thenApply(this::handleResponse);
+  }
 
-              if (statusCode >= 400) {
-                log.error("Registration failed. Status: {}, Body: {}", statusCode, response.body());
-                throw new RuntimeException(response.body());
-              }
+  public CompletableFuture<String> sendLoginRequest(LoginRequest loginRequest) {
+    String url = BASE_URL + APIConstant.LOGIN;
+    log.info("Initiating login request for email: {}", loginRequest.email());
 
-              log.debug("Registration successful. Response body: {}", response.body());
-              return response.body();
-            });
+    String jsonBody = gson.toJson(loginRequest);
+
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
+            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse);
+  }
+
+  private String handleResponse(HttpResponse<String> response) {
+    int statusCode = response.statusCode();
+    String body = response.body();
+
+    if (statusCode >= 200 && statusCode < 300) {
+      log.debug("Request successful. Body: {}", body);
+      return body;
+    } else {
+      log.error("Request failed. Status: {}, Body: {}", statusCode, body);
+      throw new RuntimeException(body);
+    }
   }
 }

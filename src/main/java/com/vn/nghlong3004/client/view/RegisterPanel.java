@@ -22,6 +22,7 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.Toast;
@@ -32,6 +33,7 @@ import raven.modal.Toast;
  * @author nghlong3004
  * @since 12/7/2025
  */
+@Slf4j
 public class RegisterPanel extends FormPanel {
 
   private JTextField txtFullName;
@@ -40,9 +42,6 @@ public class RegisterPanel extends FormPanel {
 
   private JPasswordField txtPassword;
   private JPasswordField txtRePassword;
-
-  private final HttpService httpService;
-  private final Gson gson;
 
   private final JButton cmdSignUp;
   private final ButtonLink cmdBackLogin;
@@ -56,8 +55,7 @@ public class RegisterPanel extends FormPanel {
   private int gender = -1;
 
   public RegisterPanel(HttpService httpService, Gson gson) {
-    this.httpService = httpService;
-    this.gson = gson;
+    super(httpService, gson);
     setLayout(new MigLayout("al center center"));
     JPanel panel = new JPanel();
     panel.setLayout(new MigLayout("insets n 2 n 2,fillx,wrap,width 300", "[fill,300]"));
@@ -202,6 +200,9 @@ public class RegisterPanel extends FormPanel {
 
     cmdSignUp.addActionListener(
         actionEvent -> {
+          NotificationUtil.getInstance()
+              .show(
+                  this, Toast.Type.INFO, LanguageUtil.getInstance().getString("register_handler"));
           String email = txtEmail.getText().trim();
           String password = new String(txtPassword.getPassword());
           String rePassword = new String(txtRePassword.getPassword());
@@ -212,7 +213,7 @@ public class RegisterPanel extends FormPanel {
             return;
           }
 
-          performRegister(email, password, fullName, birthday);
+          handleRegister(email, password, fullName, birthday);
         });
 
     ItemListener itemListener =
@@ -233,63 +234,71 @@ public class RegisterPanel extends FormPanel {
     radioDefault.addItemListener(itemListener);
   }
 
-  private void performRegister(String email, String password, String fullName, String birthday) {
+  private void handleRegister(String email, String password, String fullName, String birthday) {
     cmdSignUp.setEnabled(false);
 
-    RegisterRequest req = new RegisterRequest(email, password, birthday, fullName, gender);
+    RegisterRequest request = new RegisterRequest(email, password, birthday, fullName, gender);
 
     httpService
-        .sendRegisterRequest(req)
-        .thenAccept(
-            response -> {
-              SwingUtilities.invokeLater(
-                  () -> {
-                    cmdSignUp.setEnabled(true);
-                    txtEmail.setText("");
-                    txtFullName.setText("");
-                    txtPassword.setText("");
-                    txtRePassword.setText("");
-                    txtDateOfBirth.setText("");
-                    NotificationUtil.getInstance()
-                        .show(
-                            this,
-                            Toast.Type.SUCCESS,
-                            LanguageUtil.getInstance().getString("register_successfully"));
-                    ModalDialog.popModel(ApplicationConfiguration.getInstance().getLoginId());
-                  });
-            })
+        .sendRegisterRequest(request)
+        .thenAccept(response -> SwingUtilities.invokeLater(this::onRegisterSuccess))
         .exceptionally(
             ex -> {
+              Throwable cause = ex.getCause();
+              String rawMessage = (cause != null) ? cause.getMessage() : ex.getMessage();
+              String messageKey = mapErrorToMessageKey(rawMessage);
               SwingUtilities.invokeLater(
                   () -> {
-                    String errorMsgKey = "register_failed";
-                    String errorBody =
-                        ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-                    if (errorBody != null) {
-                      try {
-                        ErrorResponse errorResponse = gson.fromJson(errorBody, ErrorResponse.class);
-
-                        if ("EmailAlready".equals(errorResponse.code())) {
-                          errorMsgKey = "register_email_exists";
-                        } else if ("InvalidRequest".equals(errorResponse.code())) {
-                          errorMsgKey = "register_empty_fields";
-                        }
-
-                      } catch (JsonSyntaxException e) {
-                        if (errorBody.contains("ConnectException")
-                            || errorBody.contains("Network")) {
-                          errorMsgKey = "server_error";
-                        }
-                      }
-                    } else {
-                      errorMsgKey = "server_error";
-                    }
-
-                    showWarning(errorMsgKey);
+                    showWarning(messageKey);
                     cmdSignUp.setEnabled(true);
                   });
               return null;
             });
+  }
+
+  private void onRegisterSuccess() {
+    cmdSignUp.setEnabled(true);
+    clearRegisterForm();
+
+    NotificationUtil.getInstance()
+        .show(
+            this,
+            Toast.Type.SUCCESS,
+            LanguageUtil.getInstance().getString("register_successfully"));
+
+    ModalDialog.popModel(ApplicationConfiguration.getInstance().getLoginId());
+  }
+
+  private void clearRegisterForm() {
+    txtEmail.setText("");
+    txtFullName.setText("");
+    txtPassword.setText("");
+    txtRePassword.setText("");
+    txtDateOfBirth.setText("");
+  }
+
+  private String mapErrorToMessageKey(String errorBody) {
+    if (errorBody == null) return "server_error";
+    if (errorBody.contains("ConnectException") || errorBody.contains("Network is unreachable")) {
+      return "server_error";
+    }
+
+    try {
+      ErrorResponse errorResponse = gson.fromJson(errorBody, ErrorResponse.class);
+      if (errorResponse != null && errorResponse.code() != null) {
+        return switch (errorResponse.code()) {
+          case "EmailAlready" -> "register_email_exists";
+          case "InvalidRequest" -> "register_empty_fields";
+          case "InternalError" -> "server_internal";
+          default -> "register_failed";
+        };
+      }
+    } catch (JsonSyntaxException ignored) {
+      log.error("Cannot parse error body: {}", errorBody);
+      return "unknown_error";
+    }
+
+    return "register_failed";
   }
 
   private void initialized() {
@@ -357,7 +366,7 @@ public class RegisterPanel extends FormPanel {
     }
 
     if (!isValidEmail(email)) {
-      showWarning("register_invalid_email");
+      showWarning("invalid_email");
       return false;
     }
 
@@ -367,7 +376,7 @@ public class RegisterPanel extends FormPanel {
     }
 
     if (pass.length() < 6) {
-      showWarning("register_password_short");
+      showWarning("password_short");
       return false;
     }
 

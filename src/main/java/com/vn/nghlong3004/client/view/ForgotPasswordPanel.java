@@ -1,7 +1,9 @@
 package com.vn.nghlong3004.client.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.google.gson.Gson;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
+import com.vn.nghlong3004.client.service.HttpService;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
 import java.awt.event.ActionEvent;
@@ -19,7 +21,8 @@ import raven.modal.Toast;
  */
 public class ForgotPasswordPanel extends FormPanel {
 
-  public ForgotPasswordPanel() {
+  public ForgotPasswordPanel(HttpService httpService, Gson gson) {
+    super(httpService, gson);
     setLayout(new MigLayout("insets n 20 n 20,fillx,wrap,width 380", "[fill]"));
 
     JTextArea text =

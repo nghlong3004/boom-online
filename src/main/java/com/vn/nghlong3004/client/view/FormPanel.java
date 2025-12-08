@@ -2,9 +2,12 @@ package com.vn.nghlong3004.client.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.google.gson.Gson;
+import com.vn.nghlong3004.client.service.HttpService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Project: boom-online-client
@@ -12,7 +15,11 @@ import javax.swing.*;
  * @author nghlong3004
  * @since 12/6/2025
  */
+@RequiredArgsConstructor
 public abstract class FormPanel extends JPanel {
+
+  protected final HttpService httpService;
+  protected final Gson gson;
 
   protected void installRevealButton(JPasswordField txt) {
     FlatSVGIcon iconEye = new FlatSVGIcon("images/eye.svg", 0.3f);

@@ -1,13 +1,21 @@
 package com.vn.nghlong3004.client.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.constant.ImageConstant;
+import com.vn.nghlong3004.client.model.request.LoginRequest;
+import com.vn.nghlong3004.client.model.response.ErrorResponse;
+import com.vn.nghlong3004.client.model.response.LoginResponse;
+import com.vn.nghlong3004.client.service.HttpService;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
 import java.awt.*;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
 import raven.modal.Toast;
@@ -19,14 +27,17 @@ import raven.modal.component.DropShadowBorder;
  * @author nghlong3004
  * @since 12/7/2025
  */
+@Slf4j
 public class LoginPanel extends FormPanel {
 
   private JTextField txtUsername;
   private JPasswordField txtPassword;
+  private JButton cmdLogin;
   @Setter private CustomModalBorder registerPanel;
   @Setter private CustomModalBorder forgotPasswordPanel;
 
-  public LoginPanel() {
+  public LoginPanel(HttpService httpService, Gson gson) {
+    super(httpService, gson);
     init();
   }
 
@@ -59,7 +70,7 @@ public class LoginPanel extends FormPanel {
     txtUsername = new JTextField();
     txtPassword = new JPasswordField();
     JCheckBox chRememberMe = new JCheckBox(LanguageUtil.getInstance().getString("login_remember"));
-    JButton cmdLogin = getCmdLogin();
+    cmdLogin = getCmdLogin();
     JButton cmdForgotPassword =
         new ButtonLink(LanguageUtil.getInstance().getString("login_forgot_password"));
     JButton cmdSignUp =
@@ -103,14 +114,8 @@ public class LoginPanel extends FormPanel {
     add(panelLogin);
 
     // event
-    cmdLogin.addActionListener(
-        e -> {
-          String userName = txtUsername.getText();
-          String password = String.valueOf(txtPassword.getPassword());
-          NotificationUtil.getInstance().show(this, Toast.Type.INFO, "Click login");
-          setEmail("");
-          setPassword("");
-        });
+    cmdLogin.addActionListener(e -> handleLogin());
+    txtPassword.addActionListener(e -> handleLogin());
     cmdSignUp.addActionListener(
         e -> {
           if (registerPanel != null) {
@@ -137,6 +142,111 @@ public class LoginPanel extends FormPanel {
         });
   }
 
+  private boolean isValidEmail(String email) {
+    String emailRegex =
+        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    Pattern pat = Pattern.compile(emailRegex);
+    return email != null && pat.matcher(email).matches();
+  }
+
+  private void handleLogin() {
+    String email = txtUsername.getText().trim();
+    String password = String.valueOf(txtPassword.getPassword());
+
+    if (email.isEmpty() || password.isEmpty()) {
+      showError("login_empty_fields");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showError("invalid_email");
+      return;
+    }
+
+    if (password.length() < 6) {
+      showError("password_short");
+      return;
+    }
+
+    cmdLogin.setEnabled(false);
+    LoginRequest req = new LoginRequest(email, password);
+
+    httpService
+        .sendLoginRequest(req)
+        .thenAccept(
+            responseBody -> {
+              SwingUtilities.invokeLater(
+                  () -> {
+                    try {
+                      LoginResponse loginResponse =
+                          gson.fromJson(responseBody, LoginResponse.class);
+
+                      ApplicationConfiguration.getInstance()
+                          .setAccessToken(loginResponse.accessToken());
+                      ApplicationConfiguration.getInstance()
+                          .setRefreshToken(loginResponse.refreshToken());
+                      NotificationUtil.getInstance()
+                          .show(
+                              this,
+                              Toast.Type.SUCCESS,
+                              LanguageUtil.getInstance().getString("login_success"));
+
+                      ModalDialog.closeModal(ApplicationConfiguration.getInstance().getLoginId());
+
+                      txtUsername.setText("");
+                      txtPassword.setText("");
+                    } catch (Exception e) {
+                      log.error(e.getLocalizedMessage());
+                      showError("server_error");
+                    } finally {
+                      cmdLogin.setEnabled(true);
+                    }
+                  });
+            })
+        .exceptionally(
+            ex -> {
+              Throwable cause = ex.getCause();
+              String rawMessage = (cause != null) ? cause.getMessage() : ex.getMessage();
+              String messageKey = mapErrorToMessageKey(rawMessage);
+
+              SwingUtilities.invokeLater(
+                  () -> {
+                    showError(messageKey);
+                    cmdLogin.setEnabled(true);
+                  });
+              return null;
+            });
+  }
+
+  private void showError(String langKey) {
+    NotificationUtil.getInstance()
+        .show(this, Toast.Type.ERROR, LanguageUtil.getInstance().getString(langKey));
+  }
+
+  private String mapErrorToMessageKey(String errorBody) {
+    if (errorBody == null) return "server_error";
+
+    if (errorBody.contains("ConnectException") || errorBody.contains("Network")) {
+      return "server_error";
+    }
+
+    try {
+      ErrorResponse errorResponse = gson.fromJson(errorBody, ErrorResponse.class);
+
+      if (errorResponse != null && errorResponse.code() != null) {
+        return switch (errorResponse.code()) {
+          case "InvalidCredentials" -> "login_bad_credentials";
+          default -> "login_failed";
+        };
+      }
+    } catch (JsonSyntaxException ignored) {
+      log.error("Cannot parse error body: {}", errorBody);
+      return "server_error";
+    }
+
+    return "login_failed";
+  }
+
   private Component getCmdExternal() {
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0));
     panel.putClientProperty(FlatClientProperties.STYLE, "background:null;");
@@ -156,7 +266,7 @@ public class LoginPanel extends FormPanel {
     button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     button.addActionListener(
         actionEven -> {
-          NotificationUtil.getInstance().show(this, Toast.Type.INFO, "Click Login with Google");
+          NotificationUtil.getInstance().show(this, Toast.Type.INFO, "Chưa hỗ trợ tính năng này!");
         });
     return button;
   }

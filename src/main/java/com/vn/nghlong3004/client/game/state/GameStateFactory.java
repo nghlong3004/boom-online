@@ -43,16 +43,19 @@ public final class GameStateFactory {
             .setSliderDuration(600);
     HttpService httpService = WebApplication.getInstance().getHttpService();
     Gson gson = ApplicationConfiguration.getInstance().getGson();
+
+    LoginPanel login = new LoginPanel(httpService, gson);
+
     String icon = "images/account.svg";
-    LoginPanel login = new LoginPanel();
     CustomModalBorder loginPanel = new CustomModalBorder(login, "Sign In", icon);
+
     icon = "images/register.svg";
     CustomModalBorder registerPanel =
         new CustomModalBorder(new RegisterPanel(httpService, gson), "Sign Up", icon);
 
     icon = "images/forgot_password.svg";
     CustomModalBorder forgotPasswordPanel =
-        new CustomModalBorder(new ForgotPasswordPanel(), "Forgot Password", icon);
+        new CustomModalBorder(new ForgotPasswordPanel(httpService, gson), "Forgot Password", icon);
 
     login.setRegisterPanel(registerPanel);
     login.setForgotPasswordPanel(forgotPasswordPanel);
