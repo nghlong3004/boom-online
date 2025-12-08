@@ -1,6 +1,8 @@
 package com.vn.nghlong3004.boomonline.server.service;
 
+import com.vn.nghlong3004.boomonline.server.model.request.LoginRequest;
 import com.vn.nghlong3004.boomonline.server.model.request.RegisterRequest;
+import com.vn.nghlong3004.boomonline.server.model.response.LoginResponse;
 
 /**
  * Project: boom-online-server
@@ -10,4 +12,6 @@ import com.vn.nghlong3004.boomonline.server.model.request.RegisterRequest;
  */
 public interface AuthService {
   void register(RegisterRequest request);
+
+  LoginResponse login(LoginRequest request);
 }

@@ -1,6 +1,8 @@
 package com.vn.nghlong3004.boomonline.server.controller;
 
+import com.vn.nghlong3004.boomonline.server.model.request.LoginRequest;
 import com.vn.nghlong3004.boomonline.server.model.request.RegisterRequest;
+import com.vn.nghlong3004.boomonline.server.model.response.LoginResponse;
 import com.vn.nghlong3004.boomonline.server.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,5 +27,11 @@ public class AuthController {
   @ResponseStatus(HttpStatus.CREATED)
   public void register(@Validated @RequestBody RegisterRequest request) {
     authService.register(request);
+  }
+
+  @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseStatus(HttpStatus.OK)
+  public LoginResponse login(@Validated @RequestBody LoginRequest request) {
+    return authService.login(request);
   }
 }

@@ -1,11 +1,15 @@
 package com.vn.nghlong3004.boomonline.server.configuration;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -16,7 +20,11 @@ import org.springframework.security.web.SecurityFilterChain;
  * @since 12/8/2025
  */
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfiguration {
+
+  private final UserDetailsService userDetailsService;
+  private final PasswordEncoder passwordEncoder;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -32,7 +40,12 @@ public class SecurityConfiguration {
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
+  public AuthenticationManager authenticationManager() {
+    var authenticationProvider = new DaoAuthenticationProvider(userDetailsService);
+    authenticationProvider.setPasswordEncoder(passwordEncoder);
+    var providerManager = new ProviderManager(authenticationProvider);
+    providerManager.setEraseCredentialsAfterAuthentication(true);
+
+    return providerManager;
   }
 }
