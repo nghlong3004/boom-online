@@ -1,4 +1,4 @@
-package com.vn.nghlong3004.client.view;
+package com.vn.nghlong3004.client.view.welcome;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.google.gson.Gson;
@@ -9,6 +9,7 @@ import com.vn.nghlong3004.client.model.response.ErrorResponse;
 import com.vn.nghlong3004.client.service.HttpService;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
+import com.vn.nghlong3004.client.view.component.ButtonLink;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;

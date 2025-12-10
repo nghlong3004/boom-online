@@ -1,4 +1,4 @@
-package com.vn.nghlong3004.client.view;
+package com.vn.nghlong3004.client.view.welcome;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;

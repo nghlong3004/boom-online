@@ -1,4 +1,4 @@
-package com.vn.nghlong3004.client.view;
+package com.vn.nghlong3004.client.view.welcome;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.google.gson.Gson;
@@ -10,6 +10,7 @@ import com.vn.nghlong3004.client.model.response.ErrorResponse;
 import com.vn.nghlong3004.client.service.HttpService;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
+import com.vn.nghlong3004.client.view.component.ButtonLink;
 import javax.swing.*;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;

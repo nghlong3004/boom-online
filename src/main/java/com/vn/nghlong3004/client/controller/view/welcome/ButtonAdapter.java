@@ -1,4 +1,4 @@
-package com.vn.nghlong3004.client.view;
+package com.vn.nghlong3004.client.view.welcome;
 
 import com.vn.nghlong3004.client.game.GameLogic;
 import java.awt.*;
@@ -20,9 +20,7 @@ public abstract class ButtonAdapter implements GameLogic {
 
   private boolean wasMouseOver = false;
 
-
-  protected ButtonAdapter(
-      int x, int y, int width, int height, int rowIndex) {
+  protected ButtonAdapter(int x, int y, int width, int height, int rowIndex) {
     this.x = x;
     this.y = y;
     this.height = height;
@@ -51,9 +49,7 @@ public abstract class ButtonAdapter implements GameLogic {
     this.mouseOver = mouseOver;
   }
 
-  protected void playHoverSound() {
-
-  }
+  protected void playHoverSound() {}
 
   public boolean isMouseOver(MouseEvent e) {
     return box.contains(e.getX(), e.getY());

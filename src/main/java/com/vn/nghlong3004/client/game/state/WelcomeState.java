@@ -4,11 +4,11 @@ import static com.vn.nghlong3004.client.constant.GameConstant.*;
 
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.context.GameContext;
+import com.vn.nghlong3004.client.controller.view.CustomModalBorder;
+import com.vn.nghlong3004.client.controller.view.welcome.ButtonAdapter;
 import com.vn.nghlong3004.client.game.GamePanel;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
-import com.vn.nghlong3004.client.view.ButtonAdapter;
-import com.vn.nghlong3004.client.view.CustomModalBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
