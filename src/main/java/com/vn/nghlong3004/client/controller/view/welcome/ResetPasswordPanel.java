@@ -30,7 +30,6 @@ public class ResetPasswordPanel extends FormPanel implements ResetPasswordView {
   private final ResetPasswordPresenter presenter;
 
   public ResetPasswordPanel(HttpService httpService, Gson gson) {
-    super(httpService, gson);
     this.presenter = new ResetPasswordPresenterImpl(this, httpService, gson);
     initUI();
   }

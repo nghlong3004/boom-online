@@ -38,8 +38,6 @@ public class LoginPanel extends FormPanel implements LoginView {
   @Setter private CustomModalBorder forgotPasswordPanel;
 
   public LoginPanel(HttpService httpService, Gson gson) {
-    super(httpService, gson);
-
     this.presenter = new LoginPresenterImpl(this, httpService, gson);
 
     setLayout(new MigLayout("al center center"));

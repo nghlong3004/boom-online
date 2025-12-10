@@ -35,7 +35,6 @@ public class ForgotPasswordPanel extends FormPanel implements ForgotPasswordView
   private final ForgotPasswordPresenter presenter;
 
   public ForgotPasswordPanel(HttpService httpService, Gson gson) {
-    super(httpService, gson);
     this.presenter = new ForgotPasswordPresenterImpl(this, httpService, gson);
 
     initUI();

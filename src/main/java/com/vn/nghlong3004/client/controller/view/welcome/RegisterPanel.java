@@ -50,7 +50,6 @@ public class RegisterPanel extends FormPanel implements RegisterView {
   private final RegisterPresenter presenter;
 
   public RegisterPanel(HttpService httpService, Gson gson) {
-    super(httpService, gson);
     this.presenter = new RegisterPresenterImpl(this, httpService, gson);
 
     setLayout(new MigLayout("al center center"));

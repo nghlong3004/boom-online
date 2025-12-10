@@ -2,8 +2,6 @@ package com.vn.nghlong3004.client.controller.view.welcome;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.google.gson.Gson;
-import com.vn.nghlong3004.client.service.HttpService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
@@ -17,9 +15,6 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public abstract class FormPanel extends JPanel {
-
-  protected final HttpService httpService;
-  protected final Gson gson;
 
   protected void installRevealButton(JPasswordField txt) {
     FlatSVGIcon iconEye = new FlatSVGIcon("images/eye.svg", 0.3f);
