@@ -21,6 +21,7 @@ public enum ErrorCode {
   EMAIL_ALREADY(HttpStatus.CONFLICT.value(), "EmailAlready", "Email already exists."),
   INVALID_CREDENTIALS(
       HttpStatus.UNAUTHORIZED.value(), "InvalidCredentials", "Email or password is incorrect."),
+  EMAIL_INCORRECT(HttpStatus.UNAUTHORIZED.value(), "EmailIncorrect", "Email is incorrect."),
 
   FORBIDDEN(HttpStatus.FORBIDDEN.value(), "Forbidden", "Access denied."),
 
@@ -38,6 +39,15 @@ public enum ErrorCode {
 
   REFRESH_TOKEN_EXPIRED(
       HttpStatus.UNAUTHORIZED.value(), "RefreshTokenExpired", "Refresh token has expired."),
+
+  OTP_NOT_FOUND(
+      HttpStatus.NOT_FOUND.value(), "OtpNotFound", "OTP request not found or has expired."),
+
+  OTP_EXPIRED(HttpStatus.BAD_REQUEST.value(), "OtpExpired", "OTP code has expired."),
+
+  OTP_INCORRECT(HttpStatus.BAD_REQUEST.value(), "OtpIncorrect", "OTP code is incorrect."),
+
+  TOKEN_INCORRECT(HttpStatus.BAD_REQUEST.value(), "TokenIncorrect", "Token is incorrect."),
 
   // 5xx
   INTERNAL_ERROR(

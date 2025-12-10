@@ -1,8 +1,8 @@
 package com.vn.nghlong3004.boomonline.server.controller;
 
-import com.vn.nghlong3004.boomonline.server.model.request.LoginRequest;
-import com.vn.nghlong3004.boomonline.server.model.request.RegisterRequest;
+import com.vn.nghlong3004.boomonline.server.model.request.*;
 import com.vn.nghlong3004.boomonline.server.model.response.LoginResponse;
+import com.vn.nghlong3004.boomonline.server.model.response.OTPResponse;
 import com.vn.nghlong3004.boomonline.server.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,5 +33,23 @@ public class AuthController {
   @ResponseStatus(HttpStatus.OK)
   public LoginResponse login(@Validated @RequestBody LoginRequest request) {
     return authService.login(request);
+  }
+
+  @PostMapping(value = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public OTPResponse forgotPassword(@Validated @RequestBody ForgotPasswordRequest request) {
+    return authService.forgotPassword(request);
+  }
+
+  @PostMapping(value = "/verify-otp", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseStatus(HttpStatus.OK)
+  public OTPResponse verifyOTP(@Validated @RequestBody OTPRequest request) {
+    return authService.verifyOTP(request);
+  }
+
+  @PostMapping(value = "/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public void resetPassword(@Validated @RequestBody ResetPasswordRequest request) {
+    authService.resetPassword(request);
   }
 }
