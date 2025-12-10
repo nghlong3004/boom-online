@@ -45,6 +45,7 @@ public final class GameStateFactory {
     Gson gson = ApplicationConfiguration.getInstance().getGson();
 
     LoginPanel login = new LoginPanel(httpService, gson);
+    ForgotPasswordPanel forgotPassword = new ForgotPasswordPanel(httpService, gson);
 
     String icon = "images/account.svg";
     CustomModalBorder loginPanel = new CustomModalBorder(login, "Sign In", icon);
@@ -55,10 +56,15 @@ public final class GameStateFactory {
 
     icon = "images/forgot_password.svg";
     CustomModalBorder forgotPasswordPanel =
-        new CustomModalBorder(new ForgotPasswordPanel(httpService, gson), "Forgot Password", icon);
+        new CustomModalBorder(forgotPassword, "Forgot Password", icon);
+
+    icon = "images/forgot_password.svg";
+    CustomModalBorder resetPasswordPanel =
+        new CustomModalBorder(new ResetPasswordPanel(httpService, gson), "Reset password.", icon);
 
     login.setRegisterPanel(registerPanel);
     login.setForgotPasswordPanel(forgotPasswordPanel);
+    forgotPassword.setResetPasswordPanel(resetPasswordPanel);
     int x = GAME_WIDTH - MENU_BUTTON_WIDTH >>> 1;
     int y = GAME_HEIGHT - MENU_BUTTON_HEIGHT >>> 1;
     ButtonAdapter buttonAdapter =

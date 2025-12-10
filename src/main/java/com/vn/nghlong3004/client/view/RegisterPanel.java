@@ -201,8 +201,7 @@ public class RegisterPanel extends FormPanel {
     cmdSignUp.addActionListener(
         actionEvent -> {
           NotificationUtil.getInstance()
-              .show(
-                  this, Toast.Type.INFO, LanguageUtil.getInstance().getString("register_handler"));
+              .show(this, Toast.Type.INFO, LanguageUtil.getInstance().getString("handler"));
           String email = txtEmail.getText().trim();
           String password = new String(txtPassword.getPassword());
           String rePassword = new String(txtRePassword.getPassword());

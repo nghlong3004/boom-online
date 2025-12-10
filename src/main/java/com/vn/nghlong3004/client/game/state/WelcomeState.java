@@ -3,7 +3,7 @@ package com.vn.nghlong3004.client.game.state;
 import static com.vn.nghlong3004.client.constant.GameConstant.*;
 
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
-import com.vn.nghlong3004.client.game.GameContext;
+import com.vn.nghlong3004.client.context.GameContext;
 import com.vn.nghlong3004.client.game.GamePanel;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
@@ -12,7 +12,6 @@ import com.vn.nghlong3004.client.view.CustomModalBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import javax.swing.*;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import raven.modal.ModalDialog;

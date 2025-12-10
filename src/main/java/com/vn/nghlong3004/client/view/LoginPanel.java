@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.constant.ImageConstant;
+import com.vn.nghlong3004.client.context.ApplicationContext;
 import com.vn.nghlong3004.client.model.request.LoginRequest;
 import com.vn.nghlong3004.client.model.response.ErrorResponse;
 import com.vn.nghlong3004.client.model.response.LoginResponse;
@@ -150,6 +151,8 @@ public class LoginPanel extends FormPanel {
   }
 
   private void handleLogin() {
+    NotificationUtil.getInstance()
+        .show(this, Toast.Type.INFO, LanguageUtil.getInstance().getString("handler"));
     String email = txtUsername.getText().trim();
     String password = String.valueOf(txtPassword.getPassword());
 
@@ -181,10 +184,10 @@ public class LoginPanel extends FormPanel {
                       LoginResponse loginResponse =
                           gson.fromJson(responseBody, LoginResponse.class);
 
-                      ApplicationConfiguration.getInstance()
-                          .setAccessToken(loginResponse.accessToken());
-                      ApplicationConfiguration.getInstance()
+                      ApplicationContext.getInstance().setAccessToken(loginResponse.accessToken());
+                      ApplicationContext.getInstance()
                           .setRefreshToken(loginResponse.refreshToken());
+                      ApplicationContext.getInstance().setEmail(email);
                       NotificationUtil.getInstance()
                           .show(
                               this,
@@ -234,10 +237,7 @@ public class LoginPanel extends FormPanel {
       ErrorResponse errorResponse = gson.fromJson(errorBody, ErrorResponse.class);
 
       if (errorResponse != null && errorResponse.code() != null) {
-        return switch (errorResponse.code()) {
-          case "InvalidCredentials" -> "login_bad_credentials";
-          default -> "login_failed";
-        };
+        return "login_bad_credentials";
       }
     } catch (JsonSyntaxException ignored) {
       log.error("Cannot parse error body: {}", errorBody);

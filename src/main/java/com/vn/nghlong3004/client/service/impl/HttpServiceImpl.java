@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.constant.APIConstant;
 import com.vn.nghlong3004.client.constant.MediaTypeConstant;
-import com.vn.nghlong3004.client.model.request.ForgotPasswordRequest;
-import com.vn.nghlong3004.client.model.request.LoginRequest;
-import com.vn.nghlong3004.client.model.request.RegisterRequest;
+import com.vn.nghlong3004.client.model.request.*;
 import com.vn.nghlong3004.client.service.HttpService;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -42,12 +40,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(registerRequest);
 
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
+    HttpRequest request = buildRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -61,12 +54,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(loginRequest);
 
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
+    HttpRequest request = buildRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -80,16 +68,47 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(forgotPasswordRequest);
 
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
+    HttpRequest request = buildRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
         .thenApply(this::handleResponse);
+  }
+
+  @Override
+  public CompletableFuture<String> sendVerifyOTP(OTPRequest otpRequest) {
+    String url = BASE_URL + APIConstant.VERIFY_OTP;
+    log.info("Initiating verify otp request for email: {}", otpRequest.email());
+
+    String jsonBody = gson.toJson(otpRequest);
+
+    HttpRequest request = buildRequest(jsonBody, url);
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse);
+  }
+
+  @Override
+  public CompletableFuture<String> sendResetPassword(ResetPasswordRequest resetPasswordRequest) {
+    String url = BASE_URL + APIConstant.RESET_PASSWORD;
+    log.info("Initiating reset password request for email: {}", resetPasswordRequest.email());
+
+    String jsonBody = gson.toJson(resetPasswordRequest);
+
+    HttpRequest request = buildRequest(jsonBody, url);
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse);
+  }
+
+  private HttpRequest buildRequest(String jsonBody, String url) {
+    return HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
+        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+        .build();
   }
 
   private String handleResponse(HttpResponse<String> response) {

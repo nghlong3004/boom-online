@@ -7,5 +7,5 @@ package com.vn.nghlong3004.client.constant;
  * @since 12/7/2025
  */
 public final class NotificationConstant {
-  public static final int MAX_NOTIFICATION = 3;
+  public static final int MAX_NOTIFICATION = 1;
 }

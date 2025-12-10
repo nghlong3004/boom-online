@@ -4,8 +4,11 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
+import com.vn.nghlong3004.client.context.ApplicationContext;
 import com.vn.nghlong3004.client.model.request.ForgotPasswordRequest;
+import com.vn.nghlong3004.client.model.request.OTPRequest;
 import com.vn.nghlong3004.client.model.response.ErrorResponse;
+import com.vn.nghlong3004.client.model.response.OTPResponse;
 import com.vn.nghlong3004.client.service.HttpService;
 import com.vn.nghlong3004.client.util.LanguageUtil;
 import com.vn.nghlong3004.client.util.NotificationUtil;
@@ -16,6 +19,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 import javax.swing.*;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
@@ -30,6 +34,10 @@ import raven.modal.Toast;
 @Slf4j
 public class ForgotPasswordPanel extends FormPanel {
   private final JTextField txtEmail;
+  @Setter private CustomModalBorder resetPasswordPanel;
+
+  private boolean show = true;
+  private JButton button;
   private Timer timer;
 
   public ForgotPasswordPanel(HttpService httpService, Gson gson) {
@@ -80,7 +88,44 @@ public class ForgotPasswordPanel extends FormPanel {
     // event
     cmdSubmit.addActionListener(
         actionEvent -> {
-          NotificationUtil.getInstance().show(this, Toast.Type.INFO, "Click Submit");
+          show(Toast.Type.INFO, LanguageUtil.getInstance().getString("handler"));
+          String email = ApplicationContext.getInstance().getEmail();
+          String token = txtOTP.getText().trim();
+          if (token.length() != 8 || !token.matches("\\d+")) {
+            NotificationUtil.getInstance()
+                .show(
+                    this,
+                    Toast.Type.WARNING,
+                    LanguageUtil.getInstance().getString("forgot_password_match_otp"));
+            return;
+          }
+          OTPRequest request = new OTPRequest(email, token);
+          httpService
+              .sendVerifyOTP(request)
+              .thenAccept(
+                  responseBody -> {
+                    OTPResponse response = gson.fromJson(responseBody, OTPResponse.class);
+                    ApplicationContext.getInstance().setVerificationToken(response.token());
+                    SwingUtilities.invokeLater(
+                        () ->
+                            show(
+                                Toast.Type.INFO,
+                                LanguageUtil.getInstance().getString("reset_password_title")));
+                    button.setText(LanguageUtil.getInstance().getString("forgot_password_btn_otp"));
+                    timer.stop();
+                    show = true;
+                    ModalDialog.pushModal(
+                        resetPasswordPanel, ApplicationConfiguration.getInstance().getLoginId());
+                  })
+              .exceptionally(
+                  e -> {
+                    Throwable throwable = e.getCause();
+                    String rawMessage =
+                        (throwable != null) ? throwable.getMessage() : e.getMessage();
+                    String messageKey = mapErrorToMessageKey(rawMessage);
+                    showError(messageKey);
+                    return null;
+                  });
         });
 
     cmdBackLogin.addActionListener(
@@ -90,9 +135,6 @@ public class ForgotPasswordPanel extends FormPanel {
                   this,
                   Toast.Type.INFO,
                   LanguageUtil.getInstance().getString("login_button_login"));
-          if (timer != null) {
-            timer.stop();
-          }
           txtEmail.setText("");
           txtOTP.setText("");
           cmdSubmit.setEnabled(false);
@@ -111,22 +153,22 @@ public class ForgotPasswordPanel extends FormPanel {
   private void installRevealButton(JTextField txt, JTextField txtOTP, JButton cmdSubmit) {
     JToolBar toolBar = new JToolBar();
     toolBar.putClientProperty(FlatClientProperties.STYLE, "margin:0,0,0,5;");
-    JButton button = new JButton(LanguageUtil.getInstance().getString("forgot_password_btn_otp"));
+    button = new JButton(LanguageUtil.getInstance().getString("forgot_password_btn_otp"));
     button.addActionListener(
         new ActionListener() {
-          private boolean show = true;
 
           @Override
           public void actionPerformed(ActionEvent actionEvent) {
             if (show) {
-              if (!isValidEmail(txtEmail.getText())) {
+              show(Toast.Type.INFO, LanguageUtil.getInstance().getString("handler"));
+              String email = txtEmail.getText().trim();
+              if (!isValidEmail(email)) {
                 showError("invalid_email");
                 return;
               }
               ForgotPasswordRequest request =
                   new ForgotPasswordRequest(
-                      txtEmail.getText(),
-                      LanguageUtil.getInstance().getCurrentLocale().getLanguage());
+                      email, LanguageUtil.getInstance().getCurrentLocale().getLanguage());
               LocalDateTime startTime = LocalDateTime.now().plus(Duration.ofSeconds(60 * 5));
               timer =
                   new Timer(
@@ -152,6 +194,9 @@ public class ForgotPasswordPanel extends FormPanel {
                   .sendForgotPassword(request)
                   .thenAccept(
                       responseBody -> {
+                        OTPResponse response = gson.fromJson(responseBody, OTPResponse.class);
+                        ApplicationContext.getInstance().setVerificationToken(response.token());
+                        ApplicationContext.getInstance().setEmail(email);
                         SwingUtilities.invokeLater(
                             () ->
                                 show(
@@ -198,6 +243,8 @@ public class ForgotPasswordPanel extends FormPanel {
       if (errorResponse != null && errorResponse.code() != null) {
         return switch (errorResponse.code()) {
           case "EmailIncorrect" -> "forgot_password_send_otp_email_incorrect";
+          case "parameter_required", "OtpExpired", "OtpIncorrect", "OtpNotFound" ->
+              "forgot_password_otp_invalid";
           default -> "unknown_error";
         };
       }
@@ -216,43 +263,5 @@ public class ForgotPasswordPanel extends FormPanel {
 
   private void show(Toast.Type type, String message) {
     NotificationUtil.getInstance().show(this, type, message);
-  }
-
-  private class CreatePassword extends JPanel {
-
-    public CreatePassword() {
-      setLayout(new MigLayout("insets n 20 n 20,fillx,wrap,width 380", "[fill]"));
-      JTextArea text = new JTextArea(LanguageUtil.getInstance().getString("register_password"));
-      text.setEditable(false);
-      text.setFocusable(false);
-      text.putClientProperty(FlatClientProperties.STYLE, "border:0,0,0,0;" + "background:null;");
-      add(text);
-
-      add(new JSeparator(), "gapy 15 15");
-
-      JLabel lbPassword =
-          new JLabel(LanguageUtil.getInstance().getString("register_holder_place_password"));
-      lbPassword.putClientProperty(FlatClientProperties.STYLE, "font:bold;");
-      add(lbPassword, "gapy 10 n");
-      JPasswordField txtPassword = new JPasswordField();
-      installRevealButton(txtPassword);
-      txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Tối thiểu 6 kí tự");
-      add(txtPassword);
-
-      JLabel lbRePassword = new JLabel("Nhập lại mật khẩu");
-      lbRePassword.putClientProperty(FlatClientProperties.STYLE, "font:bold;");
-      add(lbRePassword, "gapy 10 n");
-
-      JPasswordField txtRePassword = new JPasswordField();
-      installRevealButton(txtRePassword);
-      txtRePassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Nhập lại mật khẩu");
-      add(txtRePassword);
-
-      JButton cmdSubmit = new ButtonLink("Submit");
-      cmdSubmit.putClientProperty(FlatClientProperties.STYLE, "foreground:#FFFFFF;");
-
-      add(cmdSubmit, "gapy 15 15");
-      cmdSubmit.addActionListener(actionEvent -> {});
-    }
   }
 }

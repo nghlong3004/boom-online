@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,10 +25,6 @@ public final class ApplicationConfiguration {
   @Getter private final Gson gson;
 
   private final Properties properties;
-
-  @Getter @Setter private String accessToken;
-
-  @Getter @Setter private String refreshToken;
 
   public static ApplicationConfiguration getInstance() {
     return Holder.INSTANCE;

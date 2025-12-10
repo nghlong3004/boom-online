@@ -1,5 +1,6 @@
-package com.vn.nghlong3004.client.game;
+package com.vn.nghlong3004.client.context;
 
+import com.vn.nghlong3004.client.game.GameAdapter;
 import com.vn.nghlong3004.client.game.state.GameState;
 import com.vn.nghlong3004.client.game.state.GameStateType;
 import java.awt.*;

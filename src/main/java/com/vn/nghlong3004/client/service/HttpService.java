@@ -1,8 +1,6 @@
 package com.vn.nghlong3004.client.service;
 
-import com.vn.nghlong3004.client.model.request.ForgotPasswordRequest;
-import com.vn.nghlong3004.client.model.request.LoginRequest;
-import com.vn.nghlong3004.client.model.request.RegisterRequest;
+import com.vn.nghlong3004.client.model.request.*;
 import java.util.concurrent.CompletableFuture;
 
 public interface HttpService {
@@ -12,4 +10,8 @@ public interface HttpService {
   CompletableFuture<String> sendLoginRequest(LoginRequest loginRequest);
 
   CompletableFuture<String> sendForgotPassword(ForgotPasswordRequest forgotPasswordRequest);
+
+  CompletableFuture<String> sendVerifyOTP(OTPRequest otpRequest);
+
+  CompletableFuture<String> sendResetPassword(ResetPasswordRequest resetPasswordRequest);
 }
