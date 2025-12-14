@@ -39,9 +39,6 @@ public class HomeState implements GameState {
   }
 
   @Override
-  public void print() {}
-
-  @Override
   public void render(Graphics g) {
     g.drawImage(background, 0, 0, GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT, null);
     if (isId()) {

@@ -16,8 +16,6 @@ public interface GameState extends GameAdapter {
 
   void next(GameContext gameContext);
 
-  void print();
-
   default void mouseClicked(MouseEvent e) {}
 
   default void mousePressed(MouseEvent e) {}
