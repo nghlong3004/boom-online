@@ -11,6 +11,7 @@ import com.vn.nghlong3004.client.configuration.WebConfiguration;
 import com.vn.nghlong3004.client.constant.ImageConstant;
 import com.vn.nghlong3004.client.controller.view.CustomModalBorder;
 import com.vn.nghlong3004.client.controller.view.component.TextButton;
+import com.vn.nghlong3004.client.controller.view.home.SettingPanel;
 import com.vn.nghlong3004.client.controller.view.welcome.*;
 import com.vn.nghlong3004.client.game.GamePanel;
 import com.vn.nghlong3004.client.service.HttpService;
@@ -51,16 +52,20 @@ public final class GameStateFactory {
       int y = factor + i * spacing;
       homeButtons[i] = new TextButton(x, y, texts[i]);
     }
-    return HomeState.builder().background(background).homeButtons(homeButtons).build();
+    Option option = createOption();
+    CustomModalBorder settingPanel = createSetting();
+
+    return HomeState.builder()
+        .background(background)
+        .homeButtons(homeButtons)
+        .gamePanel(gamePanel)
+        .settingPanel(settingPanel)
+        .option(option)
+        .build();
   }
 
   private static GameState createWelcomeState(GamePanel gamePanel) {
-    Option option =
-        ModalDialog.createOption()
-            .setCloseOnPressedEscape(false)
-            .setAnimationEnabled(true)
-            .setOpacity(0.5f)
-            .setSliderDuration(600);
+    Option option = createOption();
     HttpService httpService = WebConfiguration.getInstance().getHttpService();
     Gson gson = ApplicationConfiguration.getInstance().getGson();
 
@@ -97,5 +102,18 @@ public final class GameStateFactory {
         .buttonAdapter(buttonAdapter)
         .background(background)
         .build();
+  }
+
+  private static CustomModalBorder createSetting() {
+    String icon = "images/setting.svg";
+    return new CustomModalBorder(new SettingPanel(), "Setting", icon);
+  }
+
+  private static Option createOption() {
+    return ModalDialog.createOption()
+        .setCloseOnPressedEscape(false)
+        .setAnimationEnabled(true)
+        .setOpacity(0.5f)
+        .setSliderDuration(600);
   }
 }

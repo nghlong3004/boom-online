@@ -3,12 +3,15 @@ package com.vn.nghlong3004.client.game.state;
 import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.constant.GameConstant;
 import com.vn.nghlong3004.client.context.GameContext;
+import com.vn.nghlong3004.client.controller.view.CustomModalBorder;
 import com.vn.nghlong3004.client.controller.view.component.TextButton;
+import com.vn.nghlong3004.client.game.GamePanel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import lombok.Builder;
 import raven.modal.ModalDialog;
+import raven.modal.option.Option;
 
 /**
  * Project: boom-online-client
@@ -21,6 +24,9 @@ public class HomeState implements GameState {
 
   private final BufferedImage background;
   private final TextButton[] homeButtons;
+  private final GamePanel gamePanel;
+  private final CustomModalBorder settingPanel;
+  private final Option option;
 
   @Override
   public void previous(GameContext gameContext) {
@@ -70,7 +76,12 @@ public class HomeState implements GameState {
         // 2: Quit
         switch (i) {
           case 0 -> GameContext.getInstance().next();
-          case 1 -> System.out.println();
+          case 1 ->
+              ModalDialog.showModal(
+                  gamePanel,
+                  settingPanel,
+                  option,
+                  ApplicationConfiguration.getInstance().getHomeId());
           case 2 -> GameContext.getInstance().previousState();
         }
         break;
