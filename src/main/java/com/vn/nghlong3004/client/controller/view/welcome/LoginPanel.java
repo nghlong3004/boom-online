@@ -126,6 +126,11 @@ public class LoginPanel extends FormPanel implements LoginView {
               .show(this, Toast.Type.INFO, getText("forgot_password_title"));
           presenter.onForgotPasswordClicked();
         });
+
+    cmdPlayingNow.addActionListener(
+        e -> {
+          presenter.onPlayingNowClicked();
+        });
   }
 
   @Override

@@ -15,4 +15,8 @@ public final class ImageConstant {
   public static final String WELCOME_BACKGROUND = "/images/background/welcome.jpg";
   public static final String HOME_BACKGROUND = "/images/background/home.jpg";
   public static final String SETTING_BACKGROUND = "/images/background/setting.jpg";
+
+  public static final String ARROW_LEFT = "/images/buttons/arrow_left.png";
+  public static final String ARROW_RIGHT = "/images/buttons/arrow_right.png";
+  public static final String BACK = "/images/buttons/back.png";
 }

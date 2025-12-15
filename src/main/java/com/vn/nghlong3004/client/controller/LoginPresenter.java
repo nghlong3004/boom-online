@@ -14,4 +14,6 @@ public interface LoginPresenter {
   void onForgotPasswordClicked();
 
   void onGoogleLoginClicked();
+
+  void onPlayingNowClicked();
 }

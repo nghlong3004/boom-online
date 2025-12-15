@@ -31,11 +31,19 @@ import raven.modal.option.Option;
  */
 public final class GameStateFactory {
 
+  private static Option option;
+
   public static Map<GameStateType, GameState> createStateMap(GamePanel gamePanel) {
     Map<GameStateType, GameState> stateMap = new EnumMap<>(GameStateType.class);
     stateMap.put(GameStateType.WELCOME, createWelcomeState(gamePanel));
     stateMap.put(GameStateType.HOME, createHomeState(gamePanel));
+    stateMap.put(GameStateType.START, createStartState(gamePanel));
     return stateMap;
+  }
+
+  private static GameState createStartState(GamePanel gamePanel) {
+    BufferedImage background = ImageUtil.loadImage(ImageConstant.HOME_BACKGROUND);
+    return StartState.builder().background(background).gamePanel(gamePanel).build();
   }
 
   private static GameState createHomeState(GamePanel gamePanel) {
@@ -110,10 +118,14 @@ public final class GameStateFactory {
   }
 
   private static Option createOption() {
-    return ModalDialog.createOption()
-        .setCloseOnPressedEscape(false)
-        .setAnimationEnabled(true)
-        .setOpacity(0.5f)
-        .setSliderDuration(600);
+    if (option == null) {
+      option =
+          ModalDialog.createOption()
+              .setCloseOnPressedEscape(false)
+              .setAnimationEnabled(true)
+              .setOpacity(0.5f)
+              .setSliderDuration(600);
+    }
+    return option;
   }
 }

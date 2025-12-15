@@ -2,6 +2,7 @@ package com.vn.nghlong3004.client.controller.presenter;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.vn.nghlong3004.client.configuration.ApplicationConfiguration;
 import com.vn.nghlong3004.client.context.ApplicationContext;
 import com.vn.nghlong3004.client.context.GameContext;
 import com.vn.nghlong3004.client.controller.LoginPresenter;
@@ -13,6 +14,7 @@ import com.vn.nghlong3004.client.service.HttpService;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import raven.modal.ModalDialog;
 
 /**
  * Project: boom-online-client
@@ -61,7 +63,9 @@ public class LoginPresenterImpl implements LoginPresenter {
 
                 ApplicationContext.getInstance().setAccessToken(loginResponse.accessToken());
                 ApplicationContext.getInstance().setRefreshToken(loginResponse.refreshToken());
+                ApplicationContext.getInstance().setName(loginResponse.name());
                 ApplicationContext.getInstance().setEmail(email);
+                ApplicationContext.getInstance().setOfflineMode(false);
 
                 view.showSuccessMessage();
                 view.clearForm();
@@ -80,6 +84,14 @@ public class LoginPresenterImpl implements LoginPresenter {
               view.showError(mapErrorToMessageKey(rawMessage));
               return null;
             });
+  }
+
+  @Override
+  public void onPlayingNowClicked() {
+    ApplicationContext.getInstance().setOfflineMode(true);
+    ApplicationContext.getInstance().setName("Guest");
+    ModalDialog.closeModal(ApplicationConfiguration.getInstance().getWelcomeId());
+    GameContext.getInstance().next();
   }
 
   @Override

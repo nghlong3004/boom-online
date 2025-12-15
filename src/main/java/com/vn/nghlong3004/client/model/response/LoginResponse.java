@@ -6,4 +6,4 @@ package com.vn.nghlong3004.client.model.response;
  * @author nghlong3004
  * @since 12/8/2025
  */
-public record LoginResponse(String accessToken, String refreshToken) {}
+public record LoginResponse(String accessToken, String refreshToken, String name) {}

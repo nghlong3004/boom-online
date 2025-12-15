@@ -20,6 +20,10 @@ public class ApplicationContext {
 
   private String email;
 
+  private String name;
+
+  private boolean offlineMode;
+
   public static ApplicationContext getInstance() {
     return HOLDER.INSTANCE;
   }
