@@ -1,10 +1,11 @@
 package vn.nghlong3004.boom.online.client.controller.presenter;
 
+import javax.swing.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.controller.view.lobby.LobbyPanel;
 import vn.nghlong3004.boom.online.client.model.User;
 import vn.nghlong3004.boom.online.client.model.room.Room;
-import vn.nghlong3004.boom.online.client.model.room.RoomPage;
 import vn.nghlong3004.boom.online.client.service.RoomService;
 import vn.nghlong3004.boom.online.client.session.UserSession;
 import vn.nghlong3004.boom.online.client.util.I18NUtil;
@@ -15,6 +16,7 @@ import vn.nghlong3004.boom.online.client.util.I18NUtil;
  * @author nghlong3004
  * @since 12/18/2025
  */
+@Slf4j
 @RequiredArgsConstructor
 public class LobbyPresenter {
 
@@ -30,6 +32,7 @@ public class LobbyPresenter {
   }
 
   public void onRefreshClicked() {
+    view.showInfo("common.loading");
     loadPage(pageIndex);
   }
 
@@ -45,35 +48,70 @@ public class LobbyPresenter {
   public void onCreateRoomClicked() {
     User currentUser = UserSession.getInstance().getCurrentUser();
     if (currentUser == null) return;
+    view.showInfo("common.processing");
+    String defaultName =
+        I18NUtil.getString("room.base_name").formatted(currentUser.getDisplayName());
 
-    Room room =
-        roomService.createRoom(
-            currentUser,
-            I18NUtil.getString("room.base_name").formatted(currentUser.getDisplayName()));
-    view.openRoom(room);
+    roomService
+        .createRoom(currentUser, defaultName)
+        .thenAccept(
+            newRoom -> {
+              SwingUtilities.invokeLater(
+                  () -> {
+                    view.showSuccess("room.create.success");
+                    view.openRoom(newRoom);
+                  });
+            })
+        .exceptionally(
+            ex -> {
+              SwingUtilities.invokeLater(
+                  () -> {
+                    log.error("Error create room: ", ex);
+                    String msg =
+                        ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+                    view.showRawError(msg);
+                  });
+              return null;
+            });
   }
 
   public void onRoomSelected(String roomId) {
     User currentUser = UserSession.getInstance().getCurrentUser();
     if (currentUser == null) return;
-
+    view.showInfo("common.processing");
     Room room = roomService.joinRoom(roomId, currentUser);
     if (room != null) {
       view.openRoom(room);
     }
   }
 
-  private void loadPage(int newPageIndex) {
-    if (newPageIndex < 0) newPageIndex = 0;
+  private void loadPage(int targetPage) {
+    if (targetPage < 0) targetPage = 0;
+    final int finalPage = targetPage;
 
-    RoomPage page = roomService.listRooms(newPageIndex, PAGE_SIZE);
-    int totalPages = page.getTotalPages();
-    if (totalPages > 0 && newPageIndex >= totalPages) {
-      page = roomService.listRooms(totalPages - 1, PAGE_SIZE);
-      newPageIndex = page.getPageIndex();
-    }
-
-    this.pageIndex = newPageIndex;
-    view.render(page);
+    roomService
+        .rooms(finalPage, PAGE_SIZE)
+        .thenAccept(
+            pageResponse -> {
+              SwingUtilities.invokeLater(
+                  () -> {
+                    int totalPages = pageResponse.getTotalPages();
+                    if (totalPages > 0 && finalPage >= totalPages) {
+                      loadPage(totalPages - 1);
+                    } else {
+                      this.pageIndex = pageResponse.getPageIndex();
+                      view.render(pageResponse);
+                    }
+                    view.showSuccess("room.refresh");
+                  });
+            })
+        .exceptionally(
+            ex -> {
+              SwingUtilities.invokeLater(
+                  () -> {
+                    log.error("Error Load Rooms {}", ex.getMessage());
+                  });
+              return null;
+            });
   }
 }

@@ -1,5 +1,6 @@
 package vn.nghlong3004.boom.online.client.model.room;
 
+import java.time.Instant;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,30 +14,30 @@ import lombok.Getter;
 @Getter
 @Builder
 public class Room {
-    private final String id;
-    private final String name;
+  private final String id;
+  private final String name;
 
-    private final Long ownerId;
-    private final String ownerDisplayName;
+  private final Long ownerId;
+  private final String ownerDisplayName;
 
-    private final int mapIndex;
-    private final RoomStatus status;
+  private final int mapIndex;
+  private final RoomStatus status;
 
-    private final List<PlayerSlot> slots;
-    private final List<ChatMessage> chat;
+  private final List<PlayerSlot> slots;
+  private final List<ChatMessage> chat;
 
-    @Builder.Default
-    private final int maxPlayers = 4;
+  @Builder.Default private Instant created = Instant.now();
 
-    public int getCurrentPlayers() {
-        if (slots == null)
-            return 0;
-        int count = 0;
-        for (PlayerSlot slot : slots) {
-            if (slot != null && slot.isOccupied()) {
-                count++;
-            }
-        }
-        return count;
+  @Builder.Default private final int maxPlayers = 4;
+
+  public int getCurrentPlayers() {
+    if (slots == null) return 0;
+    int count = 0;
+    for (PlayerSlot slot : slots) {
+      if (slot != null && slot.isOccupied()) {
+        count++;
+      }
     }
+    return count;
+  }
 }

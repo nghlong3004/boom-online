@@ -7,6 +7,6 @@ package vn.nghlong3004.boom.online.client.model.room;
  * @since 12/18/2025
  */
 public enum RoomStatus {
-    WAITING,
-    PLAYING
+  WAITING,
+  PLAYING
 }

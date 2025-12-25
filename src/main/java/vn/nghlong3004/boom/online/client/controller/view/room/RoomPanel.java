@@ -454,8 +454,8 @@ public class RoomPanel extends JPanel {
 
           lbl.setHorizontalAlignment(SwingConstants.LEFT);
           String time =
-              value.getCreatedAt() != null
-                  ? TIME_FMT.format(value.getCreatedAt().atZone(ZoneId.systemDefault()))
+              value.getCreated() != null
+                  ? TIME_FMT.format(value.getCreated().atZone(ZoneId.systemDefault()))
                   : "";
           String name = value.getSenderDisplayName() != null ? value.getSenderDisplayName() : "";
           String content = value.getContent() != null ? value.getContent() : "";

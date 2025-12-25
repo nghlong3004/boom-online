@@ -1,7 +1,6 @@
 package vn.nghlong3004.boom.online.client.model.room;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 /**
  * Project: boom-online-client
@@ -10,18 +9,17 @@ import lombok.Getter;
  * @since 12/18/2025
  */
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class PlayerSlot {
-    private final int index;
-
-    private final boolean occupied;
-    private final boolean bot;
-
-    private final Long userId;
-    private final String displayName;
-
-    private final boolean host;
-    private final boolean ready;
-
-    private final int characterIndex;
+  private int index;
+  private boolean occupied;
+  private boolean bot;
+  private Long userId;
+  private String displayName;
+  private boolean host;
+  private boolean ready;
+  private int characterIndex;
 }

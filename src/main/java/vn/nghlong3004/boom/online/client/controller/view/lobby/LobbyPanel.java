@@ -9,18 +9,20 @@ import javax.swing.*;
 import lombok.Getter;
 import net.miginfocom.swing.MigLayout;
 import raven.modal.ModalDialog;
+import raven.modal.Toast;
 import vn.nghlong3004.boom.online.client.constant.RoomConstant;
 import vn.nghlong3004.boom.online.client.controller.presenter.LobbyPresenter;
 import vn.nghlong3004.boom.online.client.controller.view.CustomModalBorder;
 import vn.nghlong3004.boom.online.client.controller.view.component.StartButton;
 import vn.nghlong3004.boom.online.client.controller.view.room.RoomPanel;
 import vn.nghlong3004.boom.online.client.core.GameContext;
+import vn.nghlong3004.boom.online.client.model.response.RoomPageResponse;
 import vn.nghlong3004.boom.online.client.model.room.Room;
-import vn.nghlong3004.boom.online.client.model.room.RoomPage;
 import vn.nghlong3004.boom.online.client.model.room.RoomStatus;
 import vn.nghlong3004.boom.online.client.service.RoomService;
 import vn.nghlong3004.boom.online.client.util.I18NUtil;
 import vn.nghlong3004.boom.online.client.util.ImageUtil;
+import vn.nghlong3004.boom.online.client.util.NotificationUtil;
 
 /**
  * Project: boom-online-client
@@ -33,8 +35,7 @@ public class LobbyPanel extends JPanel {
   private final RoomService roomService;
   private final String modalId;
 
-  @Getter
-  private final LobbyPresenter presenter;
+  @Getter private final LobbyPresenter presenter;
 
   private final JPanel roomsContainer;
   private final JLabel lblPage;
@@ -52,12 +53,12 @@ public class LobbyPanel extends JPanel {
     JPanel header = new JPanel(new MigLayout("insets 0, fillx", "[grow][][][]"));
     header.putClientProperty(FlatClientProperties.STYLE, "background:null;");
 
-    JLabel title = new JLabel(t("lobby.title"));
+    JLabel title = new JLabel(text("lobby.title"));
     title.putClientProperty(FlatClientProperties.STYLE, "font:bold +3;");
 
-    StartButton btnCreate = new StartButton(t("lobby.btn.create"), true);
-    StartButton btnRefresh = new StartButton(t("lobby.btn.refresh"), false);
-    StartButton btnBack = new StartButton(t("lobby.btn.back_home"), false);
+    StartButton btnCreate = new StartButton(text("lobby.btn.create"), true);
+    StartButton btnRefresh = new StartButton(text("lobby.btn.refresh"), false);
+    StartButton btnBack = new StartButton(text("lobby.btn.back_home"), false);
 
     btnCreate.addActionListener(e -> presenter.onCreateRoomClicked());
     btnRefresh.addActionListener(e -> presenter.onRefreshClicked());
@@ -77,10 +78,10 @@ public class LobbyPanel extends JPanel {
     JPanel footer = new JPanel(new MigLayout("insets 0, fillx", "[grow][][]", "[]"));
     footer.putClientProperty(FlatClientProperties.STYLE, "background:null;");
 
-    lblPage = new JLabel(tf("lobby.pagination", 1, 1));
+    lblPage = new JLabel(textFormat("lobby.pagination", 1, 1));
 
-    btnPrev = new StartButton(t("lobby.btn.prev"), false);
-    btnNext = new StartButton(t("lobby.btn.next"), false);
+    btnPrev = new StartButton(text("lobby.btn.prev"), false);
+    btnNext = new StartButton(text("lobby.btn.next"), false);
 
     btnPrev.addActionListener(e -> presenter.onPrevClicked());
     btnNext.addActionListener(e -> presenter.onNextClicked());
@@ -96,14 +97,14 @@ public class LobbyPanel extends JPanel {
     presenter.init();
   }
 
-  public void render(RoomPage page) {
+  public void render(RoomPageResponse page) {
     SwingUtilities.invokeLater(
         () -> {
           roomsContainer.removeAll();
 
           List<Room> rooms = page.getRooms();
           if (rooms == null || rooms.isEmpty()) {
-            JLabel empty = new JLabel(t("lobby.empty"));
+            JLabel empty = new JLabel(text("lobby.empty"));
             empty.putClientProperty(
                 FlatClientProperties.STYLE, "foreground: $Label.disabledForeground;");
             roomsContainer.add(empty);
@@ -114,7 +115,7 @@ public class LobbyPanel extends JPanel {
           }
 
           int totalPages = Math.max(1, page.getTotalPages());
-          lblPage.setText(tf("lobby.pagination", (page.getPageIndex() + 1), totalPages));
+          lblPage.setText(textFormat("lobby.pagination", (page.getPageIndex() + 1), totalPages));
 
           btnPrev.setEnabled(page.getPageIndex() > 0);
           btnNext.setEnabled(page.getPageIndex() + 1 < totalPages);
@@ -128,7 +129,8 @@ public class LobbyPanel extends JPanel {
     RoomPanel roomPanel = new RoomPanel(roomService, modalId, true, presenter::onRefreshClicked);
     roomPanel.getPresenter().init(room);
 
-    CustomModalBorder roomBorder = new CustomModalBorder(roomPanel, t("room.default_name.online"), null);
+    CustomModalBorder roomBorder =
+        new CustomModalBorder(roomPanel, text("room.default_name.online"), null);
     ModalDialog.pushModal(roomBorder, modalId);
   }
 
@@ -140,20 +142,22 @@ public class LobbyPanel extends JPanel {
 
     panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-    String roomName = room.getName() != null ? room.getName() : t("room.default_name.online");
+    String roomName = room.getName() != null ? room.getName() : text("room.default_name.online");
     String mapLabel = safeMapName(room.getMapIndex());
-    String statusLabel = room.getStatus() == RoomStatus.PLAYING
-        ? t("lobby.room.status.playing")
-        : t("lobby.room.status.waiting");
+    String statusLabel =
+        room.getStatus() == RoomStatus.PLAYING
+            ? text("lobby.room.status.playing")
+            : text("lobby.room.status.waiting");
 
-    String line1 = tf("lobby.room.title.format", roomName, room.getId());
-    String line2 = tf(
-        "lobby.room.meta.format",
-        room.getOwnerDisplayName(),
-        mapLabel,
-        statusLabel,
-        room.getCurrentPlayers(),
-        room.getMaxPlayers());
+    String line1 = textFormat("lobby.room.title.format", roomName, room.getId());
+    String line2 =
+        textFormat(
+            "lobby.room.meta.format",
+            room.getOwnerDisplayName(),
+            mapLabel,
+            statusLabel,
+            room.getCurrentPlayers(),
+            room.getMaxPlayers());
 
     JLabel lblTitle = new JLabel(line1);
     lblTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold;");
@@ -178,6 +182,30 @@ public class LobbyPanel extends JPanel {
     return panel;
   }
 
+  public void showSuccess(String messageKey) {
+    SwingUtilities.invokeLater(
+        () -> NotificationUtil.getInstance().show(this, Toast.Type.SUCCESS, getText(messageKey)));
+  }
+
+  public void showError(String key) {
+    SwingUtilities.invokeLater(
+        () -> NotificationUtil.getInstance().show(this, Toast.Type.ERROR, text(key)));
+  }
+
+  public void showRawError(String key) {
+    SwingUtilities.invokeLater(
+        () -> NotificationUtil.getInstance().show(this, Toast.Type.ERROR, key));
+  }
+
+  public void showInfo(String key) {
+    SwingUtilities.invokeLater(
+        () -> NotificationUtil.getInstance().show(this, Toast.Type.INFO, getText(key)));
+  }
+
+  private String getText(String key) {
+    return I18NUtil.getString(key);
+  }
+
   private Icon iconForMap(int mapIndex, int w, int h) {
     int idx = Math.floorMod(mapIndex, RoomConstant.MAP_AVATARS.length);
     var img = ImageUtil.loadImage(RoomConstant.MAP_AVATARS[idx]);
@@ -192,11 +220,11 @@ public class LobbyPanel extends JPanel {
     return file.replace("_avatar", "").replace(".jpg", "");
   }
 
-  private static String t(String key) {
+  private static String text(String key) {
     return I18NUtil.getString(key);
   }
 
-  private static String tf(String key, Object... args) {
-    return String.format(t(key), args);
+  private static String textFormat(String key, Object... args) {
+    return String.format(text(key), args);
   }
 }

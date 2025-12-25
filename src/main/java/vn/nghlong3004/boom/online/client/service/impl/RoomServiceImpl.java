@@ -2,12 +2,19 @@ package vn.nghlong3004.boom.online.client.service.impl;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import lombok.RequiredArgsConstructor;
 import vn.nghlong3004.boom.online.client.constant.RoomConstant;
 import vn.nghlong3004.boom.online.client.model.User;
+import vn.nghlong3004.boom.online.client.model.request.CreateRoomRequest;
+import vn.nghlong3004.boom.online.client.model.response.RoomPageResponse;
 import vn.nghlong3004.boom.online.client.model.room.*;
+import vn.nghlong3004.boom.online.client.model.room.ChatMessageType;
+import vn.nghlong3004.boom.online.client.model.room.RoomStatus;
+import vn.nghlong3004.boom.online.client.service.HttpService;
 import vn.nghlong3004.boom.online.client.service.RoomService;
+import vn.nghlong3004.boom.online.client.session.UserSession;
 
 /**
  * Project: boom-online-client
@@ -15,68 +22,25 @@ import vn.nghlong3004.boom.online.client.service.RoomService;
  * @author nghlong3004
  * @since 12/18/2025
  */
+@RequiredArgsConstructor
 public class RoomServiceImpl implements RoomService {
 
-  private final Map<String, Room> rooms = new ConcurrentHashMap<>();
+  private final Map<String, Room> rooms;
+  private final HttpService httpService;
 
-  public RoomServiceImpl() {
-    seedRooms();
+  @Override
+  public CompletableFuture<RoomPageResponse> rooms(int pageIndex, int pageSize) {
+    String token = UserSession.getInstance().getAccessToken();
+    return httpService.getRooms(pageIndex, pageSize, token);
   }
 
   @Override
-  public RoomPage listRooms(int pageIndex, int pageSize) {
-    List<Room> list = new ArrayList<>(rooms.values());
-    list.sort(Comparator.comparing(Room::getId));
-    return page(list, pageIndex, pageSize);
-  }
+  public CompletableFuture<Room> createRoom(User owner, String roomName) {
+    String token = UserSession.getInstance().getAccessToken();
 
-  @Override
-  public Room createRoom(User owner, String roomName) {
-    Objects.requireNonNull(owner, "owner");
+    CreateRoomRequest request = new CreateRoomRequest(roomName, 0);
 
-    String id = UUID.randomUUID().toString();
-    String name = (roomName == null || roomName.isBlank()) ? "New Room" : roomName.trim();
-
-    List<PlayerSlot> slots = new ArrayList<>(4);
-    slots.add(
-        PlayerSlot.builder()
-            .index(0)
-            .occupied(true)
-            .bot(false)
-            .userId(owner.getId())
-            .displayName(owner.getDisplayName())
-            .host(true)
-            .ready(false)
-            .characterIndex(0)
-            .build());
-
-    for (int i = 1; i < 4; i++) {
-      slots.add(PlayerSlot.builder().index(i).occupied(false).bot(false).build());
-    }
-
-    List<ChatMessage> chat = new CopyOnWriteArrayList<>();
-    chat.add(
-        ChatMessage.builder()
-            .id(UUID.randomUUID().toString())
-            .type(ChatMessageType.SYSTEM)
-            .content(owner.getDisplayName() + " đã tạo phòng")
-            .createdAt(Instant.now())
-            .build());
-
-    Room room =
-        Room.builder()
-            .id(id)
-            .name(name)
-            .ownerId(owner.getId())
-            .ownerDisplayName(owner.getDisplayName())
-            .mapIndex(0)
-            .status(RoomStatus.WAITING)
-            .slots(slots)
-            .chat(chat)
-            .build();
-
-    rooms.put(id, room);
-    return room;
+    return httpService.createRoom(request, token);
   }
 
   @Override
@@ -124,7 +88,7 @@ public class RoomServiceImpl implements RoomService {
                 .id(UUID.randomUUID().toString())
                 .type(ChatMessageType.SYSTEM)
                 .content(user.getDisplayName() + " đã vào phòng")
-                .createdAt(Instant.now())
+                .created(Instant.now())
                 .build());
 
     rooms.put(roomId, updated);
@@ -158,7 +122,7 @@ public class RoomServiceImpl implements RoomService {
                   .id(UUID.randomUUID().toString())
                   .type(ChatMessageType.SYSTEM)
                   .content(user.getDisplayName() + " đã rời phòng")
-                  .createdAt(Instant.now())
+                  .created(Instant.now())
                   .build());
     }
 
@@ -196,7 +160,7 @@ public class RoomServiceImpl implements RoomService {
                   .id(UUID.randomUUID().toString())
                   .type(ChatMessageType.SYSTEM)
                   .content(newOwnerName + " đã trở thành chủ phòng")
-                  .createdAt(Instant.now())
+                  .created(Instant.now())
                   .build());
     }
 
@@ -244,7 +208,7 @@ public class RoomServiceImpl implements RoomService {
                   .id(UUID.randomUUID().toString())
                   .type(ChatMessageType.SYSTEM)
                   .content(user.getDisplayName() + " đã thay đổi trạng thái sẵn sàng")
-                  .createdAt(Instant.now())
+                  .created(Instant.now())
                   .build());
     }
 
@@ -269,7 +233,7 @@ public class RoomServiceImpl implements RoomService {
                 .id(UUID.randomUUID().toString())
                 .type(ChatMessageType.SYSTEM)
                 .content("Chủ phòng đã đổi map")
-                .createdAt(Instant.now())
+                .created(Instant.now())
                 .build());
 
     rooms.put(roomId, updated);
@@ -308,9 +272,8 @@ public class RoomServiceImpl implements RoomService {
   }
 
   @Override
-  public ChatMessage sendChat(String roomId, User user, String content) {
+  public void sendChat(String roomId, User user, String content) {
     Room room = requireRoom(roomId);
-    if (content == null || content.isBlank()) return null;
 
     ChatMessage msg =
         ChatMessage.builder()
@@ -319,11 +282,10 @@ public class RoomServiceImpl implements RoomService {
             .senderId(user != null ? user.getId() : null)
             .senderDisplayName(user != null ? user.getDisplayName() : null)
             .content(content.trim())
-            .createdAt(Instant.now())
+            .created(Instant.now())
             .build();
 
     room.getChat().add(msg);
-    return msg;
   }
 
   @Override
@@ -388,12 +350,12 @@ public class RoomServiceImpl implements RoomService {
         .build();
   }
 
-  private RoomPage page(List<Room> rooms, int pageIndex, int pageSize) {
+  private RoomPageResponse page(List<Room> rooms, int pageIndex, int pageSize) {
     int total = rooms.size();
     int start = Math.max(0, pageIndex * pageSize);
     int end = Math.min(total, start + pageSize);
     List<Room> sub = (start >= end) ? List.of() : rooms.subList(start, end);
-    return RoomPage.builder()
+    return RoomPageResponse.builder()
         .rooms(new ArrayList<>(sub))
         .pageIndex(pageIndex)
         .pageSize(pageSize)

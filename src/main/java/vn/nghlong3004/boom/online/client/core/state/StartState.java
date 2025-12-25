@@ -11,12 +11,10 @@ import raven.modal.option.Option;
 import vn.nghlong3004.boom.online.client.constant.GameConstant;
 import vn.nghlong3004.boom.online.client.controller.view.CustomModalBorder;
 import vn.nghlong3004.boom.online.client.controller.view.lobby.LobbyPanel;
-import vn.nghlong3004.boom.online.client.controller.view.room.RoomPanel;
 import vn.nghlong3004.boom.online.client.core.GameContext;
 import vn.nghlong3004.boom.online.client.core.GameObjectContainer;
 import vn.nghlong3004.boom.online.client.core.GamePanel;
 import vn.nghlong3004.boom.online.client.model.User;
-import vn.nghlong3004.boom.online.client.model.room.Room;
 import vn.nghlong3004.boom.online.client.service.RoomService;
 import vn.nghlong3004.boom.online.client.session.ApplicationSession;
 import vn.nghlong3004.boom.online.client.session.UserSession;
@@ -125,13 +123,5 @@ public class StartState implements GameState {
       GameContext.getInstance().previous();
       return;
     }
-
-    Room room = roomService.createRoom(me, null);
-    RoomPanel roomPanel = new RoomPanel(roomService, startId, false, null);
-    roomPanel.getPresenter().init(room);
-    CustomModalBorder roomBorder =
-        new CustomModalBorder(roomPanel, I18NUtil.getString("room.default_name.offline"), null);
-
-    ModalDialog.showModal(gamePanel, roomBorder, option, startId);
   }
 }

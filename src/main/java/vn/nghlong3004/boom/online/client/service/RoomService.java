@@ -1,9 +1,9 @@
 package vn.nghlong3004.boom.online.client.service;
 
+import java.util.concurrent.CompletableFuture;
 import vn.nghlong3004.boom.online.client.model.User;
-import vn.nghlong3004.boom.online.client.model.room.ChatMessage;
+import vn.nghlong3004.boom.online.client.model.response.RoomPageResponse;
 import vn.nghlong3004.boom.online.client.model.room.Room;
-import vn.nghlong3004.boom.online.client.model.room.RoomPage;
 
 /**
  * Project: boom-online-client
@@ -15,9 +15,9 @@ import vn.nghlong3004.boom.online.client.model.room.RoomPage;
  */
 public interface RoomService {
 
-  RoomPage listRooms(int pageIndex, int pageSize);
+  CompletableFuture<RoomPageResponse> rooms(int pageIndex, int pageSize);
 
-  Room createRoom(User owner, String roomName);
+  CompletableFuture<Room> createRoom(User owner, String roomName);
 
   Room joinRoom(String roomId, User user);
 
@@ -29,7 +29,7 @@ public interface RoomService {
 
   Room changeCharacter(String roomId, User user, int characterIndex);
 
-  ChatMessage sendChat(String roomId, User user, String content);
+  void sendChat(String roomId, User user, String content);
 
   Room getRoom(String roomId);
 }

@@ -13,12 +13,12 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ChatMessage {
-    private final String id;
-    private final ChatMessageType type;
+  private final String id;
+  private final ChatMessageType type;
 
-    private final Long senderId;
-    private final String senderDisplayName;
+  private final Long senderId;
+  private final String senderDisplayName;
 
-    private final String content;
-    private final Instant createdAt;
+  private final String content;
+  private final Instant created;
 }
