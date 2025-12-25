@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import vn.nghlong3004.boom.online.server.exception.ErrorCode;
+import vn.nghlong3004.boom.online.server.exception.ResourceException;
 import vn.nghlong3004.boom.online.server.model.*;
 import vn.nghlong3004.boom.online.server.model.request.CreateRoomRequest;
 import vn.nghlong3004.boom.online.server.model.response.RoomPageResponse;
@@ -95,6 +97,57 @@ public class RoomServiceImpl implements RoomService {
             .room(room)
             .build();
     room.getChat().add(sysMsg);
+
+    return roomRepository.save(room);
+  }
+
+  @Override
+  @Transactional
+  public Room joinRoom(String roomId) {
+    AuthenticatedUser authenticatedUser = userService.getCurrentUser();
+    Long userId = authenticatedUser.getId();
+    String displayName = authenticatedUser.getDisplayName();
+
+    Room room =
+        roomRepository
+            .findById(roomId)
+            .orElseThrow(() -> new ResourceException(ErrorCode.ROOM_NOT_FOUND));
+
+    if (room.getStatus() == RoomStatus.PLAYING) {
+      throw new ResourceException(ErrorCode.ROOM_PLAYING);
+    }
+
+    boolean alreadyInRoom =
+        room.getSlots().stream()
+            .anyMatch(slot -> slot.isOccupied() && userId.equals(slot.getUserId()));
+
+    if (alreadyInRoom) {
+      return room;
+    }
+
+    PlayerSlot emptySlot =
+        room.getSlots().stream()
+            .filter(slot -> !slot.isOccupied())
+            .findFirst()
+            .orElseThrow(() -> new ResourceException(ErrorCode.ROOM_FULL));
+
+    emptySlot.setOccupied(true);
+    emptySlot.setBot(false);
+    emptySlot.setUserId(userId);
+    emptySlot.setDisplayName(displayName);
+    emptySlot.setHost(false);
+    emptySlot.setReady(false);
+    emptySlot.setCharacterIndex(0);
+
+    ChatMessage joinMsg =
+        ChatMessage.builder()
+            .id(UUID.randomUUID().toString())
+            .type(ChatMessageType.SYSTEM)
+            .content(displayName + " đã vào phòng.")
+            .created(Instant.now())
+            .room(room)
+            .build();
+    room.getChat().add(joinMsg);
 
     return roomRepository.save(room);
   }

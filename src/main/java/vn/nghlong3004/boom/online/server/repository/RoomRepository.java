@@ -9,4 +9,4 @@ import vn.nghlong3004.boom.online.server.model.Room;
  * @author nghlong3004
  * @since 12/25/2025
  */
-public interface RoomRepository extends JpaRepository<Room, Long> {}
+public interface RoomRepository extends JpaRepository<Room, String> {}

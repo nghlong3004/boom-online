@@ -14,4 +14,6 @@ public interface RoomService {
   RoomPageResponse rooms(int pageIndex, int pageSize);
 
   Room createRoom(CreateRoomRequest request);
+
+  Room joinRoom(String roomId);
 }

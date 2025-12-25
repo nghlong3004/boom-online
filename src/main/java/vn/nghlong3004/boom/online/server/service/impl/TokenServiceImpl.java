@@ -1,11 +1,5 @@
 package vn.nghlong3004.boom.online.server.service.impl;
 
-import vn.nghlong3004.boom.online.server.constant.APIConstant;
-import vn.nghlong3004.boom.online.server.constant.JwtConstant;
-import vn.nghlong3004.boom.online.server.exception.ErrorCode;
-import vn.nghlong3004.boom.online.server.exception.ResourceException;
-import vn.nghlong3004.boom.online.server.model.AuthenticatedUser;
-import vn.nghlong3004.boom.online.server.service.TokenService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +9,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
+import vn.nghlong3004.boom.online.server.constant.APIConstant;
+import vn.nghlong3004.boom.online.server.constant.JwtConstant;
+import vn.nghlong3004.boom.online.server.exception.ErrorCode;
+import vn.nghlong3004.boom.online.server.exception.ResourceException;
+import vn.nghlong3004.boom.online.server.model.AuthenticatedUser;
+import vn.nghlong3004.boom.online.server.service.TokenService;
 
 /**
  * Project: boom-online-server
@@ -69,10 +69,11 @@ public class TokenServiceImpl implements TokenService {
 
   private String generateToken(Authentication authentication, int expirationMinutes, String type) {
     Instant now = Instant.now();
-    var principal = (AuthenticatedUser) authentication.getPrincipal();
+    AuthenticatedUser principal = (AuthenticatedUser) authentication.getPrincipal();
     assert principal != null;
     Long userId = principal.getId();
     String scope = principal.getAuthority();
+    String displayName = principal.getDisplayName();
 
     String username = authentication.getName();
 
@@ -84,6 +85,7 @@ public class TokenServiceImpl implements TokenService {
             .claim(JwtConstant.SCOPE, scope)
             .claim(JwtConstant.USER_ID, userId)
             .claim(JwtConstant.TYPE, type)
+            .claim(JwtConstant.DISPLAY_NAME, displayName)
             .build();
 
     JwtEncoderParameters params =

@@ -34,4 +34,10 @@ public class RoomController {
   public Room createRoom(@Valid @RequestBody CreateRoomRequest request) {
     return roomService.createRoom(request);
   }
+
+  @PostMapping("/{roomId}/join")
+  @ResponseStatus(HttpStatus.OK)
+  public Room joinRoom(@PathVariable String roomId) {
+    return roomService.joinRoom(roomId);
+  }
 }

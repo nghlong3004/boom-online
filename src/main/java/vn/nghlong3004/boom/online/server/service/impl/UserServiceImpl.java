@@ -29,7 +29,13 @@ public class UserServiceImpl implements UserService {
     var username = authentication.getName();
     String role = jwt.getClaimAsString(JwtConstant.SCOPE);
     var authorities = List.of(new SimpleGrantedAuthority(role));
+    String displayName = jwt.getClaimAsString(JwtConstant.DISPLAY_NAME);
     log.info("Get current user -> id:{}, username:{}, role:{}", id, username, role);
-    return AuthenticatedUser.builder().id(id).username(username).authorities(authorities).build();
+    return AuthenticatedUser.builder()
+        .id(id)
+        .username(username)
+        .displayName(displayName)
+        .authorities(authorities)
+        .build();
   }
 }
