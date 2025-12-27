@@ -44,16 +44,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     String path = request.getRequestURI();
     log.info("Incoming request path: {}", path);
-    if (isPublicPath(path)) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       filterChain.doFilter(request, response);
       return;
     }
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      log.debug("No Authorization header found or it does not start with 'Bearer '");
-      setResponse(response, ErrorCode.FORBIDDEN);
-      return;
-    }
+    log.info(authHeader);
     String token = authHeader.substring(7);
     log.info("Extracted JWT token: {}", token);
 
@@ -81,10 +77,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
     SecurityContextHolder.getContext().setAuthentication(auth);
     filterChain.doFilter(request, response);
-  }
-
-  private boolean isPublicPath(String path) {
-    return path.startsWith("/api/v1/auth");
   }
 
   private void setResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
