@@ -18,10 +18,12 @@ public class ApplicationSession {
 
   private final String welcomeId;
   private final String homeId;
+  private final String startId;
 
   private ApplicationSession() {
     welcomeId = UUID.randomUUID().toString();
     homeId = UUID.randomUUID().toString();
+    startId = UUID.randomUUID().toString();
   }
 
   public static ApplicationSession getInstance() {

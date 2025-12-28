@@ -12,9 +12,10 @@ import lombok.Setter;
  * @since 12/6/2025
  */
 public abstract class ButtonAdapter {
-  @Getter @Setter protected boolean mousePressed, mouseOver;
+  @Getter @Setter protected boolean mousePressed;
+  protected boolean mouseOver;
   @Getter protected int x, y, width, height;
-  protected int rowIndex, columnIndex;
+  protected int rowIndex;
   protected Rectangle box;
 
   private boolean wasMouseOver = false;
@@ -26,10 +27,6 @@ public abstract class ButtonAdapter {
     this.width = width;
     this.box = new Rectangle(x, y, width, height);
     this.rowIndex = rowIndex;
-  }
-
-  protected ButtonAdapter(int x, int y, int width, int height) {
-    this(x, y, width, height, 0);
   }
 
   protected abstract void loadImage();

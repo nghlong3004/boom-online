@@ -5,11 +5,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.constant.MediaTypeConstant;
 import vn.nghlong3004.boom.online.client.model.request.*;
+import vn.nghlong3004.boom.online.client.model.response.RoomPageResponse;
+import vn.nghlong3004.boom.online.client.model.room.Room;
 import vn.nghlong3004.boom.online.client.service.HttpService;
 
 /**
@@ -22,9 +25,52 @@ import vn.nghlong3004.boom.online.client.service.HttpService;
 @RequiredArgsConstructor
 public class HttpServiceImpl implements HttpService {
   private static final String HTTP = "http";
-  private final HttpClient client;
-  private final Gson gson;
+  private final HttpClient client =
+      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
   private final String serverUrl;
+  private final Gson gson;
+
+  @Override
+  public CompletableFuture<RoomPageResponse> getRooms(int page, int size, String token) {
+
+    String url = HTTP + serverUrl + "/rooms?page=" + page + "&size=" + size;
+    log.info("Fetching rooms from URL: {}", url);
+
+    HttpRequest request = buildGetRequest(url, token);
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse)
+        .thenApply(jsonBody -> gson.fromJson(jsonBody, RoomPageResponse.class));
+  }
+
+  @Override
+  public CompletableFuture<Room> createRoom(CreateRoomRequest createRoomRequest, String token) {
+    String url = HTTP + serverUrl + "/rooms/create";
+    log.info("Creating room at URL: {}", url);
+
+    String jsonBody = gson.toJson(createRoomRequest);
+
+    HttpRequest request = buildPostRequest(jsonBody, url, token);
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse)
+        .thenApply(json -> gson.fromJson(json, Room.class));
+  }
+
+  @Override
+  public CompletableFuture<Room> joinRoom(String roomId, String token) {
+    String url = HTTP + serverUrl + "/rooms/" + roomId + "/join";
+    log.info("Joining room: {}", url);
+
+    HttpRequest request = buildPostRequest("", url, token);
+
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(this::handleResponse)
+        .thenApply(json -> gson.fromJson(json, Room.class));
+  }
 
   @Override
   public CompletableFuture<String> sendRegisterRequest(RegisterRequest registerRequest) {
@@ -33,7 +79,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(registerRequest);
 
-    HttpRequest request = buildRequest(jsonBody, url);
+    HttpRequest request = buildAuthRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -47,7 +93,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(loginRequest);
 
-    HttpRequest request = buildRequest(jsonBody, url);
+    HttpRequest request = buildAuthRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -61,7 +107,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(forgotPasswordRequest);
 
-    HttpRequest request = buildRequest(jsonBody, url);
+    HttpRequest request = buildAuthRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -75,7 +121,7 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(otpRequest);
 
-    HttpRequest request = buildRequest(jsonBody, url);
+    HttpRequest request = buildAuthRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -89,14 +135,32 @@ public class HttpServiceImpl implements HttpService {
 
     String jsonBody = gson.toJson(resetPasswordRequest);
 
-    HttpRequest request = buildRequest(jsonBody, url);
+    HttpRequest request = buildAuthRequest(jsonBody, url);
 
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
         .thenApply(this::handleResponse);
   }
 
-  private HttpRequest buildRequest(String jsonBody, String url) {
+  private HttpRequest buildGetRequest(String url, String token) {
+    return HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .header("Authorization", "Bearer " + token)
+        .header("Accept", MediaTypeConstant.APPLICATION_JSON_VALUE)
+        .GET()
+        .build();
+  }
+
+  private HttpRequest buildPostRequest(String jsonBody, String url, String token) {
+    return HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .header("Authorization", "Bearer " + token)
+        .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)
+        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+        .build();
+  }
+
+  private HttpRequest buildAuthRequest(String jsonBody, String url) {
     return HttpRequest.newBuilder()
         .uri(URI.create(url))
         .header(MediaTypeConstant.NAME, MediaTypeConstant.APPLICATION_JSON_VALUE)

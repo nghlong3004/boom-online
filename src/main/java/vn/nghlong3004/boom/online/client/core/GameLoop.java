@@ -70,7 +70,6 @@ public class GameLoop implements Runnable {
 
       // 4. Display FPS/UPS
       if (System.currentTimeMillis() - timer > 1000) {
-        log.info("FPS: {} | UPS: {}", frames, updates);
         updates = 0;
         frames = 0;
         timer += 1000;
