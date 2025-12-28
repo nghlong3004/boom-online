@@ -7,11 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.constant.RoomConstant;
 import vn.nghlong3004.boom.online.client.controller.view.room.RoomPanel;
+import vn.nghlong3004.boom.online.client.core.GameContext;
+import vn.nghlong3004.boom.online.client.core.state.GameStateType;
 import vn.nghlong3004.boom.online.client.model.User;
 import vn.nghlong3004.boom.online.client.model.room.Room;
+import vn.nghlong3004.boom.online.client.model.room.RoomStatus;
 import vn.nghlong3004.boom.online.client.service.RoomService;
 import vn.nghlong3004.boom.online.client.service.WebSocketService;
 import vn.nghlong3004.boom.online.client.session.ApplicationSession;
+import vn.nghlong3004.boom.online.client.session.PlayingSession;
 import vn.nghlong3004.boom.online.client.session.UserSession;
 
 /**
@@ -37,6 +41,11 @@ public class RoomPresenter {
           this.roomService.setCurrentRoom(room);
           view.renderRoom(currentRoom);
           unlock(isLock);
+          if (room.getStatus() == RoomStatus.PLAYING) {
+            PlayingSession.getInstance().initFromRoom(currentRoom);
+            SwingUtilities.invokeLater(
+                () -> GameContext.getInstance().changeState(GameStateType.PLAYING));
+          }
         });
   }
 
@@ -105,13 +114,7 @@ public class RoomPresenter {
     if (currentRoom != null && !Objects.equals(currentRoom.getOwnerId(), currentUser.getId())) {
       return;
     }
-    roomService
-        .startGame()
-        .exceptionally(
-            ex -> {
-              log.error("Failed to start game", ex);
-              return null;
-            });
+    executeAction(roomService.startGame());
   }
 
   public void onToggleReadyClicked() {

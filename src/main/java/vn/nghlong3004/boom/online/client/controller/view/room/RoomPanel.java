@@ -210,9 +210,12 @@ public class RoomPanel extends JPanel {
           int charIdx = Math.floorMod(myChar, RoomConstant.PLAYER_AVATARS.length);
           lblCharacterPreview.setIcon(getCharacterPreviewIcon(charIdx));
 
-          if (!isHost)
+          if (!isHost) {
             btnAction.setText(
                 isMeReady(room, myId) ? text("room.btn.unready") : text("room.btn.ready"));
+          } else {
+            btnAction.setText(text("room.btn.start"));
+          }
 
           if (chatModel != null) {
             chatModel.clear();

@@ -9,5 +9,6 @@ package vn.nghlong3004.boom.online.client.core.state;
 public enum GameStateType {
   WELCOME,
   HOME,
-  START
+  START,
+  PLAYING
 }

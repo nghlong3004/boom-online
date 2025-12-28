@@ -79,9 +79,8 @@ public class InMemoryRoomServiceImpl implements RoomService {
             .filter(s -> s.isOccupied() && !s.isHost())
             .allMatch(PlayerSlot::isReady);
     if (allReady) {
-      System.out.println("Game Offline Starting...");
+      currentRoom.setStatus(RoomStatus.PLAYING);
     }
-
     return CompletableFuture.completedFuture(currentRoom);
   }
 
