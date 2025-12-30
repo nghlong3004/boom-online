@@ -3,7 +3,6 @@ package vn.nghlong3004.boom.online.client.core;
 import java.awt.*;
 import javax.swing.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.constant.GameConstant;
 import vn.nghlong3004.boom.online.client.input.KeyboardInput;
@@ -17,9 +16,14 @@ import vn.nghlong3004.boom.online.client.input.MouseInput;
  */
 @Getter
 @Slf4j
-@RequiredArgsConstructor
 public class GamePanel extends JPanel {
   private final GameContext gameContext;
+
+  public GamePanel(GameContext gameContext) {
+    this.gameContext = gameContext;
+    setting();
+    setFocusable(true);
+  }
 
   @Override
   public void paintComponent(Graphics g) {
@@ -29,6 +33,12 @@ public class GamePanel extends JPanel {
 
   protected void update() {
     gameContext.update();
+  }
+
+  public void ensureFocus() {
+    if (!hasFocus()) {
+      requestFocusInWindow();
+    }
   }
 
   protected void setting() {

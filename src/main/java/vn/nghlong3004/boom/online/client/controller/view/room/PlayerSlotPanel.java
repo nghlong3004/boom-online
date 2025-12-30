@@ -12,10 +12,8 @@ import vn.nghlong3004.boom.online.client.util.ImageUtil;
 /**
  * Project: boom-online-client
  *
- * <p>A single slot card (2x2 grid) inside Room.
- *
  * @author nghlong3004
- * @since 12/18/2025
+ * @since 12/28/2025
  */
 public class PlayerSlotPanel extends JPanel {
 

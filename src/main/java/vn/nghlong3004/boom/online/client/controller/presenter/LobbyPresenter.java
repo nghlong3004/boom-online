@@ -116,7 +116,7 @@ public class LobbyPresenter {
   }
 
   private void loadPage(int targetPage) {
-    if (isProcessing) return;
+    if (isProcessing || webSocketService == null) return;
     if (targetPage < 0) targetPage = 0;
 
     startProcessing();

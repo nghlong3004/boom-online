@@ -38,6 +38,7 @@ public class StartState implements GameState {
   private final TextButton textButton;
   private final Option option;
   private boolean installed;
+  private LobbyPanel lobbyPanel;
   private CustomModalBorder lobbyBorder;
 
   @Override
@@ -106,6 +107,10 @@ public class StartState implements GameState {
     }
   }
 
+  public void ping() {
+    lobbyPanel.getRoomPanel().getPresenter().onToggleReadyClicked();
+  }
+
   private void install() {
     String startId = ApplicationSession.getInstance().getStartId();
     if (ModalDialog.isIdExist(startId)) {
@@ -131,9 +136,10 @@ public class StartState implements GameState {
     RoomService roomService = GameObjectContainer.getOnlineRoomService();
     Gson gson = GameObjectContainer.getGson();
     WebSocketService webSocketService = GameObjectContainer.getWebSocketService();
-    LobbyPanel lobbyPanel = new LobbyPanel(roomService, startId, webSocketService, gson);
+    lobbyPanel = new LobbyPanel(roomService, startId, webSocketService, gson);
     lobbyBorder = new CustomModalBorder(lobbyPanel, I18NUtil.getString("lobby.title"), null);
     lobbyPanel.getPresenter().init();
+
     ModalDialog.showModal(gamePanel, lobbyBorder, option, startId);
   }
 
@@ -144,7 +150,7 @@ public class StartState implements GameState {
       GameContext.getInstance().previous();
       return;
     }
-    LobbyPanel lobbyPanel = new LobbyPanel(roomService, startId, null, null);
+    lobbyPanel = new LobbyPanel(roomService, startId, null, null);
     lobbyBorder = new CustomModalBorder(lobbyPanel, I18NUtil.getString("lobby.title"), null);
     ModalDialog.showModal(gamePanel, lobbyBorder, option, startId);
   }

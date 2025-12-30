@@ -18,6 +18,7 @@ public class PlayerSlot {
   private boolean occupied;
   private boolean bot;
   private Long userId;
+  private String username;
   private String displayName;
   private boolean host;
   private boolean ready;

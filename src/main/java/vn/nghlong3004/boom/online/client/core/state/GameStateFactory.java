@@ -40,7 +40,13 @@ public final class GameStateFactory {
     stateMap.put(GameStateType.WELCOME, createWelcomeState(gamePanel));
     stateMap.put(GameStateType.HOME, createHomeState(gamePanel));
     stateMap.put(GameStateType.START, createStartState(gamePanel));
+    stateMap.put(GameStateType.PLAYING, createPlayingState(gamePanel));
     return stateMap;
+  }
+
+  private static GameState createPlayingState(GamePanel gamePanel) {
+
+    return new PlayingState(gamePanel);
   }
 
   private static GameState createStartState(GamePanel gamePanel) {

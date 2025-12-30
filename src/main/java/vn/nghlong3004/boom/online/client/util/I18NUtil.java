@@ -29,7 +29,6 @@ public class I18NUtil {
 
   public static String getString(String key) {
     try {
-      log.info("Loading key: {}", key);
       return resourceBundle.getString(key);
     } catch (Exception e) {
       return "Key not found: " + key;

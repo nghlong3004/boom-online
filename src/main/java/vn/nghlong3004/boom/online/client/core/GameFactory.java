@@ -18,7 +18,6 @@ public final class GameFactory {
     gameContext.changeState(GameStateType.WELCOME);
     GameLoop gameLoop = createGameLoop(gamePanel);
     GameCanvas gameCanvas = new GameCanvas(new Thread(gameLoop));
-    gamePanel.setting();
     gameCanvas.configure(gamePanel);
     gamePanel.requestFocus();
     return gameCanvas;

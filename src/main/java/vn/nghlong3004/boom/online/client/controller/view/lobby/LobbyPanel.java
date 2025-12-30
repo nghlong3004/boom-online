@@ -40,7 +40,7 @@ public class LobbyPanel extends JPanel {
   private final WebSocketService webSocketService;
   private final RoomService roomService;
   private final String modalId;
-  private RoomPanel roomPanel;
+  @Getter private RoomPanel roomPanel;
 
   private final StartButton btnCreate;
   private final StartButton btnRefresh;
@@ -162,7 +162,7 @@ public class LobbyPanel extends JPanel {
 
   public void openRoom(Room room) {
     roomPanel = new RoomPanel(roomService, modalId, presenter::onRefreshClicked, webSocketService);
-    roomPanel.getPresenter().update(room);
+    roomPanel.getPresenter().update(room, false);
 
     CustomModalBorder roomBorder =
         new CustomModalBorder(roomPanel, text("room.default_name.online"), null);
@@ -170,7 +170,7 @@ public class LobbyPanel extends JPanel {
   }
 
   public void updateRoom(Room room) {
-    roomPanel.getPresenter().update(room);
+    roomPanel.getPresenter().update(room, false);
   }
 
   private JComponent createRoomItem(Room room) {

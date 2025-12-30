@@ -24,7 +24,7 @@ import vn.nghlong3004.boom.online.client.service.HttpService;
 @Slf4j
 @RequiredArgsConstructor
 public class HttpServiceImpl implements HttpService {
-  private static final String HTTP = "http";
+  private static final String HTTP = "http://";
   private final HttpClient client =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
   private final String serverUrl;

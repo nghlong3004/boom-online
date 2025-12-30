@@ -1,7 +1,6 @@
 package vn.nghlong3004.boom.online.client.controller.view.room;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import java.awt.Cursor;
 import java.awt.Image;
 import java.awt.event.ActionListener;
 import java.time.ZoneId;
@@ -52,9 +51,11 @@ public class RoomPanel extends JPanel {
   private final JButton btnMapRight;
 
   private final JLabel lblCharacterPreview;
-  private final JLabel lblCharacterName;
   private final JButton btnCharLeft;
   private final JButton btnCharRight;
+
+  private final JButton btnBack;
+  private final JButton btnSend;
 
   private final StartButton btnAction;
 
@@ -65,8 +66,6 @@ public class RoomPanel extends JPanel {
 
   private final Map<Integer, Icon> mapPreviewCache = new HashMap<>();
   private final Map<Integer, Icon> characterPreviewCache = new HashMap<>();
-  private int lastMapIndex = Integer.MIN_VALUE;
-  private int lastCharacterIndex = Integer.MIN_VALUE;
 
   private boolean forceScrollNextRender = false;
   private Room lastRenderedRoom;
@@ -83,8 +82,6 @@ public class RoomPanel extends JPanel {
 
     setOpaque(false);
     setLayout(new MigLayout("fill, insets 16, wrap", "[grow,fill]", "[][grow,fill]"));
-
-    add(buildHeader(), "growx");
 
     JPanel body =
         new JPanel(
@@ -105,7 +102,8 @@ public class RoomPanel extends JPanel {
       slotPanels[i] = new PlayerSlotPanel();
       left.add(slotPanels[i], "grow, push, hmin 0");
     }
-
+    btnSend = new JButton(text("room.chat.send"));
+    btnSend.addActionListener(sendAction());
     left.add(buildChatCard(), "span 2, grow, push, hmin 0");
 
     JPanel right = new JPanel(new MigLayout("fill, insets 0, wrap", "[grow,fill]", "[][grow][]"));
@@ -140,28 +138,23 @@ public class RoomPanel extends JPanel {
             text("room.character.title"), "fill, insets 14, wrap", "[grow,fill]", "[][grow][]");
     JPanel charRow = new JPanel(new MigLayout("fillx, insets 0", "[][grow,fill][]", "[grow]"));
     charRow.putClientProperty(FlatClientProperties.STYLE, "background:null;");
-
+    btnBack = iconButton(ImageConstant.BACK);
     btnCharLeft = iconButton(ImageConstant.ARROW_LEFT);
     btnCharRight = iconButton(ImageConstant.ARROW_RIGHT);
+    btnBack.addActionListener(e -> presenter.onBackClicked());
     btnCharLeft.addActionListener(e -> presenter.onCharacterLeft());
     btnCharRight.addActionListener(e -> presenter.onCharacterRight());
 
     lblCharacterPreview = new JLabel();
     lblCharacterPreview.setHorizontalAlignment(SwingConstants.CENTER);
-
+    lblCharacterPreview.putClientProperty(FlatClientProperties.STYLE, "background:null;");
     charRow.add(btnCharLeft, "w 40!, h 40!");
     charRow.add(lblCharacterPreview, "grow");
     charRow.add(btnCharRight, "w 40!, h 40!");
-
-    lblCharacterName = new JLabel(" ", SwingConstants.CENTER);
-    lblCharacterName.putClientProperty(
-        FlatClientProperties.STYLE, "foreground:$Label.disabledForeground; font: -1;");
-
+    charRow.setOpaque(false);
     characterCard.add(charRow, "grow");
-    characterCard.add(lblCharacterName, "growx");
 
     btnAction = new StartButton(text("room.btn.ready"), true);
-    applyButtonUx(btnAction);
 
     right.add(mapCard, "growx, h 40%");
     right.add(characterCard, "grow, h 40%");
@@ -169,6 +162,7 @@ public class RoomPanel extends JPanel {
 
     body.add(left, "grow, push");
     body.add(right, "grow, push");
+    add(buildHeader(), "growx");
     add(body, "grow, push");
 
     btnAction.addActionListener(
@@ -184,8 +178,6 @@ public class RoomPanel extends JPanel {
         () -> {
           if (room == null) return;
 
-          lblRoomTitle.setText(
-              room.getName() != null ? room.getName() : text("room.default_name.online"));
           lblRoomMeta.setText(
               textFormat(
                   "room.meta.format",
@@ -213,21 +205,17 @@ public class RoomPanel extends JPanel {
 
           boolean isHost =
               myId != null && room.getOwnerId() != null && myId.equals(room.getOwnerId());
-          btnMapLeft.setEnabled(isHost);
-          btnMapRight.setEnabled(isHost);
 
           int myChar = getMyCharacterIndex(room, myId);
           int charIdx = Math.floorMod(myChar, RoomConstant.PLAYER_AVATARS.length);
           lblCharacterPreview.setIcon(getCharacterPreviewIcon(charIdx));
-          lblCharacterName.setText(safeName(RoomConstant.PLAYER_AVATARS[charIdx]));
 
-          btnCharLeft.setEnabled(myId != null);
-          btnCharRight.setEnabled(myId != null);
-
-          if (isHost) btnAction.setText(text("room.btn.start"));
-          else
+          if (!isHost) {
             btnAction.setText(
                 isMeReady(room, myId) ? text("room.btn.unready") : text("room.btn.ready"));
+          } else {
+            btnAction.setText(text("room.btn.start"));
+          }
 
           if (chatModel != null) {
             chatModel.clear();
@@ -244,9 +232,9 @@ public class RoomPanel extends JPanel {
     btnCharRight.setEnabled(enabled);
     btnCharLeft.setEnabled(enabled);
     txtChat.setEnabled(enabled);
+    btnBack.setEnabled(enabled);
+    btnSend.setEnabled(enabled);
     btnAction.setEnabled(enabled);
-    this.setCursor(
-        enabled ? Cursor.getDefaultCursor() : Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
   }
 
   public int getMyCharacterIndex(Room room, Long myId) {
@@ -282,8 +270,6 @@ public class RoomPanel extends JPanel {
         FlatClientProperties.STYLE, "foreground:$Label.disabledForeground;");
     left.add(lblRoomTitle);
     left.add(lblRoomMeta);
-    JButton btnBack = iconButton(ImageConstant.BACK);
-    btnBack.addActionListener(e -> presenter.onBackClicked());
     header.add(left);
     header.add(btnBack, "w 44!, h 44!");
     return header;
@@ -306,24 +292,23 @@ public class RoomPanel extends JPanel {
     input.putClientProperty(FlatClientProperties.STYLE, "background:null;");
     txtChat = new JTextField();
     txtChat.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, text("room.chat.placeholder"));
-    JButton btnSend = new JButton(text("room.chat.send"));
-    applyButtonUx(btnSend);
-    ActionListener sendAction =
-        e -> {
-          String content = txtChat.getText();
-          if (content == null || content.trim().isEmpty()) return;
-          forceScrollNextRender = true;
-          presenter.onSendChat(content.trim());
-          txtChat.setText("");
-        };
-    btnSend.addActionListener(sendAction);
-    txtChat.addActionListener(sendAction);
+    txtChat.addActionListener(sendAction());
     installChatListRenderer();
     input.add(txtChat);
     input.add(btnSend, "w 76!");
     card.add(chatScroll, "grow, push");
     card.add(input, "growx");
     return card;
+  }
+
+  private ActionListener sendAction() {
+    return e -> {
+      String content = txtChat.getText();
+      if (content == null || content.trim().isEmpty()) return;
+      forceScrollNextRender = true;
+      presenter.onSendChat(content.trim());
+      txtChat.setText("");
+    };
   }
 
   private void scrollChatToBottom() {
@@ -390,9 +375,8 @@ public class RoomPanel extends JPanel {
 
   private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
-  private static JPanel glassCard(String title, String layout, String col, String row) {
+  private JPanel glassCard(String title, String layout, String col, String row) {
     JPanel card = new JPanel(new MigLayout(layout, col, row));
-    card.setOpaque(false);
     card.putClientProperty(
         FlatClientProperties.STYLE,
         "arc:20; border:1,1,1,1,fade($Component.borderColor,70%),,20; background:fade($Panel.background,55%);");
@@ -406,12 +390,7 @@ public class RoomPanel extends JPanel {
     Icon icon =
         new ImageIcon(ImageUtil.loadImage(resPath).getScaledInstance(27, 18, Image.SCALE_SMOOTH));
     JButton button = new JButton(icon);
-    applyButtonUx(button);
     return button;
-  }
-
-  private static void applyButtonUx(AbstractButton b) {
-    b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
   }
 
   private boolean isMeHost(Room room) {

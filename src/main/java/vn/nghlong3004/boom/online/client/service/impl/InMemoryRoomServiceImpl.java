@@ -3,6 +3,7 @@ package vn.nghlong3004.boom.online.client.service.impl;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.random.RandomGeneratorFactory;
 import vn.nghlong3004.boom.online.client.model.User;
 import vn.nghlong3004.boom.online.client.model.response.RoomPageResponse;
 import vn.nghlong3004.boom.online.client.model.room.*;
@@ -47,6 +48,7 @@ public class InMemoryRoomServiceImpl implements RoomService {
                 .occupied(true)
                 .bot(false)
                 .userId(owner.getId())
+                .username(owner.getEmail())
                 .displayName(owner.getDisplayName())
                 .host(true)
                 .ready(true)
@@ -78,9 +80,8 @@ public class InMemoryRoomServiceImpl implements RoomService {
             .filter(s -> s.isOccupied() && !s.isHost())
             .allMatch(PlayerSlot::isReady);
     if (allReady) {
-      System.out.println("Game Offline Starting...");
+      currentRoom.setStatus(RoomStatus.PLAYING);
     }
-
     return CompletableFuture.completedFuture(currentRoom);
   }
 
@@ -150,7 +151,7 @@ public class InMemoryRoomServiceImpl implements RoomService {
         .displayName("Bot")
         .host(false)
         .ready(true)
-        .characterIndex(1)
+        .characterIndex(RandomGeneratorFactory.getDefault().create().nextInt() % 4)
         .build();
   }
 }
