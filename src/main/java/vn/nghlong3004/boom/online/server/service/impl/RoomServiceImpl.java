@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import vn.nghlong3004.boom.online.server.exception.ErrorCode;
 import vn.nghlong3004.boom.online.server.exception.ResourceException;
@@ -21,6 +20,7 @@ import vn.nghlong3004.boom.online.server.model.request.CreateRoomRequest;
 import vn.nghlong3004.boom.online.server.model.request.RoomActionRequest;
 import vn.nghlong3004.boom.online.server.model.response.RoomPageResponse;
 import vn.nghlong3004.boom.online.server.repository.RoomRepository;
+import vn.nghlong3004.boom.online.server.service.GameService;
 import vn.nghlong3004.boom.online.server.service.RoomService;
 import vn.nghlong3004.boom.online.server.service.UserService;
 
@@ -39,7 +39,7 @@ public class RoomServiceImpl implements RoomService {
   private final SimpMessagingTemplate messagingTemplate;
 
   private final UserService userService;
-  private final UserDetailsService userDetailsService;
+  private final GameService gameService;
 
   @Override
   public RoomPageResponse rooms(int pageIndex, int pageSize) {
@@ -80,7 +80,12 @@ public class RoomServiceImpl implements RoomService {
             .build();
 
     for (int i = 0; i < room.getMaxPlayers(); i++) {
-      PlayerSlot slot = PlayerSlot.builder().index(i).room(room).build();
+      PlayerSlot slot =
+          PlayerSlot.builder()
+              .index(i)
+              .room(room)
+              .username(authenticatedUser.getUsername())
+              .build();
 
       if (i == 0) {
         slot.setOccupied(true);
@@ -111,6 +116,7 @@ public class RoomServiceImpl implements RoomService {
     AuthenticatedUser user = userService.getCurrentUser();
     Long userId = user.getId();
     String displayName = user.getDisplayName();
+    String username = user.getUsername();
 
     log.info("User {} (ID: {}) is attempting to join room: {}", displayName, userId, roomId);
     Room room = getRoom(roomId);
@@ -138,8 +144,7 @@ public class RoomServiceImpl implements RoomService {
                   log.warn("Join failed: Room {} is full", roomId);
                   return new ResourceException(ErrorCode.ROOM_FULL);
                 });
-
-    updateSlot(emptySlot, userId, displayName);
+    updateSlot(emptySlot, userId, displayName, username);
     addSystemMessage(room, displayName + " joined the room.");
 
     Room savedRoom = roomRepository.save(room);
@@ -183,9 +188,14 @@ public class RoomServiceImpl implements RoomService {
         request.type(),
         roomId,
         request.username());
-    AuthenticatedUser user =
-        (AuthenticatedUser) userDetailsService.loadUserByUsername(request.username());
     Room room = getRoom(roomId);
+    PlayerSlot slot =
+        room.getSlots().stream()
+            .filter(e -> e.getUsername().equals(request.username()))
+            .toList()
+            .getFirst();
+    AuthenticatedUser user =
+        AuthenticatedUser.builder().id(slot.getUserId()).displayName(slot.getDisplayName()).build();
 
     switch (request.type()) {
       case CHAT -> {
@@ -213,13 +223,20 @@ public class RoomServiceImpl implements RoomService {
   @Override
   @Transactional
   public void handleUserDisconnection(String username) {
-    AuthenticatedUser userEntity =
-        (AuthenticatedUser) userDetailsService.loadUserByUsername(username);
-
-    var roomOptional = roomRepository.findRoomByUserId(userEntity.getId());
+    var roomOptional = roomRepository.findRoomByUsername(username);
 
     if (roomOptional.isPresent()) {
       Room room = roomOptional.get();
+      PlayerSlot slot =
+          room.getSlots().stream()
+              .filter(e -> e.getUsername().equals(username))
+              .toList()
+              .getFirst();
+      AuthenticatedUser userEntity =
+          AuthenticatedUser.builder()
+              .id(slot.getUserId())
+              .displayName(slot.getDisplayName())
+              .build();
       log.info("User {} disconnected abnormally. Cleaning up room: {}", username, room.getId());
       leaveRoom(room.getId(), userEntity);
     }
@@ -311,6 +328,7 @@ public class RoomServiceImpl implements RoomService {
     if (allReady) {
       log.info("Game starting in room {}", room.getId());
       room.setStatus(RoomStatus.PLAYING);
+      gameService.startGame(room);
       addSystemMessage(room, "Game started!");
     } else {
       log.info("Start failed in room {}: Not all players are ready", room.getId());
@@ -369,8 +387,9 @@ public class RoomServiceImpl implements RoomService {
     return 0;
   }
 
-  private void updateSlot(PlayerSlot slot, Long userId, String displayName) {
+  private void updateSlot(PlayerSlot slot, Long userId, String displayName, String username) {
     slot.setOccupied(true);
+    slot.setUsername(username);
     slot.setBot(false);
     slot.setUserId(userId);
     slot.setDisplayName(displayName);
