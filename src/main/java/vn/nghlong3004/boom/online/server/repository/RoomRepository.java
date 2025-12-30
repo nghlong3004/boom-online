@@ -14,4 +14,7 @@ import vn.nghlong3004.boom.online.server.model.Room;
 public interface RoomRepository extends JpaRepository<Room, String> {
   @Query("SELECT r FROM Room r JOIN r.slots s WHERE s.userId = :userId AND s.occupied = true")
   Optional<Room> findRoomByUserId(Long userId);
+
+  @Query("SELECT r FROM Room r JOIN r.slots s WHERE s.username = :username AND s.occupied = true")
+  Optional<Room> findRoomByUsername(String username);
 }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.nghlong3004.boom.online.server.model.Room;
 import vn.nghlong3004.boom.online.server.model.request.CreateRoomRequest;
 import vn.nghlong3004.boom.online.server.model.response.RoomPageResponse;
+import vn.nghlong3004.boom.online.server.service.GameService;
 import vn.nghlong3004.boom.online.server.service.RoomService;
 
 /**
@@ -21,6 +22,7 @@ import vn.nghlong3004.boom.online.server.service.RoomService;
 public class RoomController {
 
   private final RoomService roomService;
+  private final GameService gameService;
 
   @GetMapping
   @ResponseStatus(HttpStatus.OK)
