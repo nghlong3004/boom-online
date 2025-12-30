@@ -33,7 +33,6 @@ public class GamePanel extends JPanel {
 
   protected void update() {
     gameContext.update();
-    ensureFocus();
   }
 
   public void ensureFocus() {

@@ -40,12 +40,13 @@ public final class GameStateFactory {
     stateMap.put(GameStateType.WELCOME, createWelcomeState(gamePanel));
     stateMap.put(GameStateType.HOME, createHomeState(gamePanel));
     stateMap.put(GameStateType.START, createStartState(gamePanel));
-    stateMap.put(GameStateType.PLAYING, createPlayingState());
+    stateMap.put(GameStateType.PLAYING, createPlayingState(gamePanel));
     return stateMap;
   }
 
-  private static GameState createPlayingState() {
-    return new PlayingState();
+  private static GameState createPlayingState(GamePanel gamePanel) {
+
+    return new PlayingState(gamePanel);
   }
 
   private static GameState createStartState(GamePanel gamePanel) {
@@ -69,7 +70,7 @@ public final class GameStateFactory {
     int factor = (GAME_HEIGHT - BUTTON_HEIGHT) / 2;
     int spacing = (BUTTON_HEIGHT * 5) / 4;
 
-    String[] texts = { "START", "SETTING", "QUIT" };
+    String[] texts = {"START", "SETTING", "QUIT"};
 
     for (int i = 0; i < 3; i++) {
       int y = factor + i * spacing;
@@ -96,17 +97,21 @@ public final class GameStateFactory {
     LoginPanel login = new LoginPanel(httpService, gson);
     ForgotPasswordPanel forgotPassword = new ForgotPasswordPanel(httpService, gson);
     RegisterPanel register = new RegisterPanel(httpService, gson, login.getPresenter());
-    ResetPasswordPanel resetPassword = new ResetPasswordPanel(httpService, gson, forgotPassword.getPresenter());
+    ResetPasswordPanel resetPassword =
+        new ResetPasswordPanel(httpService, gson, forgotPassword.getPresenter());
 
-    CustomModalBorder loginPanel = new CustomModalBorder(login, "Sign In", ImageConstant.LOGIN_ICON);
+    CustomModalBorder loginPanel =
+        new CustomModalBorder(login, "Sign In", ImageConstant.LOGIN_ICON);
 
-    CustomModalBorder registerPanel = new CustomModalBorder(register, "Sign Up", ImageConstant.REGISTER_ICON);
+    CustomModalBorder registerPanel =
+        new CustomModalBorder(register, "Sign Up", ImageConstant.REGISTER_ICON);
 
-    CustomModalBorder forgotPasswordPanel = new CustomModalBorder(
-        forgotPassword, "Forgot Password", ImageConstant.FORGOT_PASSWORD_ICON);
+    CustomModalBorder forgotPasswordPanel =
+        new CustomModalBorder(
+            forgotPassword, "Forgot Password", ImageConstant.FORGOT_PASSWORD_ICON);
 
-    CustomModalBorder resetPasswordPanel = new CustomModalBorder(resetPassword, "Reset password.",
-        ImageConstant.RESET_PASSWORD_ICON);
+    CustomModalBorder resetPasswordPanel =
+        new CustomModalBorder(resetPassword, "Reset password.", ImageConstant.RESET_PASSWORD_ICON);
 
     login.setRegisterPanel(registerPanel);
     login.setForgotPasswordPanel(forgotPasswordPanel);
@@ -132,11 +137,12 @@ public final class GameStateFactory {
 
   private static Option createOption() {
     if (option == null) {
-      option = ModalDialog.createOption()
-          .setCloseOnPressedEscape(false)
-          .setAnimationEnabled(true)
-          .setOpacity(0.5f)
-          .setSliderDuration(600);
+      option =
+          ModalDialog.createOption()
+              .setCloseOnPressedEscape(false)
+              .setAnimationEnabled(true)
+              .setOpacity(0.5f)
+              .setSliderDuration(600);
     }
     return option;
   }

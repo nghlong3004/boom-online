@@ -15,6 +15,12 @@ import vn.nghlong3004.boom.online.client.constant.PlayingConstant;
 import vn.nghlong3004.boom.online.client.model.playing.PlayerInfo;
 import vn.nghlong3004.boom.online.client.session.UserSession;
 
+/**
+ * Project: boom-online-client
+ *
+ * @author nghlong3004
+ * @since 12/29/2025
+ */
 public class HudRenderer {
 
   private static final Color BACKGROUND_START = new Color(25, 25, 35, 240);
@@ -46,13 +52,14 @@ public class HudRenderer {
   }
 
   private void renderBackground(Graphics2D g2d) {
-    GradientPaint gradient = new GradientPaint(
-        PlayingConstant.HUD_X,
-        0,
-        BACKGROUND_START,
-        PlayingConstant.HUD_X + PlayingConstant.HUD_WIDTH,
-        0,
-        BACKGROUND_END);
+    GradientPaint gradient =
+        new GradientPaint(
+            PlayingConstant.HUD_X,
+            0,
+            BACKGROUND_START,
+            PlayingConstant.HUD_X + PlayingConstant.HUD_WIDTH,
+            0,
+            BACKGROUND_END);
     g2d.setPaint(gradient);
     g2d.fillRect(PlayingConstant.HUD_X, 0, PlayingConstant.HUD_WIDTH, GameConstant.GAME_HEIGHT);
   }
@@ -88,8 +95,9 @@ public class HudRenderer {
 
   private void renderCardBackground(
       Graphics2D g2d, int x, int y, int width, int height, Color accentColor) {
-    RoundRectangle2D card = new RoundRectangle2D.Float(
-        x, y, width, height, PlayingConstant.PLAYER_CARD_ARC, PlayingConstant.PLAYER_CARD_ARC);
+    RoundRectangle2D card =
+        new RoundRectangle2D.Float(
+            x, y, width, height, PlayingConstant.PLAYER_CARD_ARC, PlayingConstant.PLAYER_CARD_ARC);
 
     g2d.setColor(CARD_BACKGROUND);
     g2d.fill(card);
@@ -182,7 +190,7 @@ public class HudRenderer {
   private void renderHostBadge(Graphics2D g2d, int x, int y) {
     g2d.setColor(HOST_BADGE_COLOR);
     g2d.setFont(new Font("SansSerif", Font.PLAIN, 16));
-    g2d.drawString("👑", x, y + 14);
+    g2d.drawString("me", x, y + 14);
   }
 
   private void renderEmptySlot(
@@ -197,8 +205,9 @@ public class HudRenderer {
   }
 
   private void renderDeadOverlay(Graphics2D g2d, int x, int y, int width, int height) {
-    RoundRectangle2D overlay = new RoundRectangle2D.Float(
-        x, y, width, height, PlayingConstant.PLAYER_CARD_ARC, PlayingConstant.PLAYER_CARD_ARC);
+    RoundRectangle2D overlay =
+        new RoundRectangle2D.Float(
+            x, y, width, height, PlayingConstant.PLAYER_CARD_ARC, PlayingConstant.PLAYER_CARD_ARC);
     g2d.setColor(DEAD_OVERLAY);
     g2d.fill(overlay);
 

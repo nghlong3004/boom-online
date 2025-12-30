@@ -6,6 +6,12 @@ import java.util.Set;
 import lombok.Getter;
 import vn.nghlong3004.boom.online.client.model.bomber.Direction;
 
+/**
+ * Project: boom-online-client
+ *
+ * @author nghlong3004
+ * @since 12/29/2025
+ */
 public class InputHandler {
 
   private final Set<Integer> pressedKeys;

@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.stomp.*;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+import vn.nghlong3004.boom.online.client.model.response.GameUpdate;
 import vn.nghlong3004.boom.online.client.model.room.Room;
 import vn.nghlong3004.boom.online.client.service.WebSocketService;
 import vn.nghlong3004.boom.online.client.session.SessionHandlerAdapter;
@@ -29,6 +30,7 @@ public class WebSocketServiceImpl implements WebSocketService {
   private final WebSocketStompClient stompClient;
   private StompSession session;
   private StompSession.Subscription currentSubscription;
+  private StompSession.Subscription gameSubscription;
 
   public WebSocketServiceImpl(String host, Gson gson) {
     this.serverUrl = WEBSOCKET + host + "/ws";
@@ -41,10 +43,6 @@ public class WebSocketServiceImpl implements WebSocketService {
   public void connectAndSubscribe(String token, String roomId, Consumer<Room> onRoomUpdate) {
     ensureConnected(token);
 
-    if (currentSubscription != null) {
-      currentSubscription.unsubscribe();
-      log.info("Unsubscribed from previous topic");
-    }
     String topic = "/topic/room/" + roomId;
     currentSubscription =
         session.subscribe(
@@ -64,6 +62,48 @@ public class WebSocketServiceImpl implements WebSocketService {
             });
 
     log.info("Subscribed to topic: {}", topic);
+  }
+
+  @Override
+  public void subscribeToGame(String roomId, Consumer<GameUpdate> onGameUpdate) {
+    if (session == null || !session.isConnected()) {
+      log.warn("Cannot subscribe to game: WebSocket is not connected");
+      return;
+    }
+
+    if (gameSubscription != null) {
+      gameSubscription.unsubscribe();
+      log.info("Unsubscribed from previous game topic");
+    }
+
+    String topic = "/topic/game/" + roomId;
+    gameSubscription =
+        session.subscribe(
+            topic,
+            new StompFrameHandler() {
+              @Override
+              @NonNull
+              public Type getPayloadType(@NonNull StompHeaders headers) {
+                return GameUpdate.class;
+              }
+
+              @Override
+              public void handleFrame(@NonNull StompHeaders headers, Object payload) {
+                GameUpdate update = (GameUpdate) payload;
+                onGameUpdate.accept(update);
+              }
+            });
+
+    log.info("Subscribed to game topic: {}", topic);
+  }
+
+  @Override
+  public void unsubscribeFromGame() {
+    if (gameSubscription != null) {
+      gameSubscription.unsubscribe();
+      gameSubscription = null;
+      log.info("Unsubscribed from game topic");
+    }
   }
 
   private void ensureConnected(String token) {
@@ -91,6 +131,7 @@ public class WebSocketServiceImpl implements WebSocketService {
   public void send(String destination, Object payload) {
     if (session != null && session.isConnected()) {
       try {
+        log.info("Check destination: {}", destination);
         session.send(destination, payload);
       } catch (Exception e) {
         log.error("Failed to send message to {}", destination, e);
@@ -102,6 +143,7 @@ public class WebSocketServiceImpl implements WebSocketService {
 
   @Override
   public void disconnect() {
+    unsubscribeFromGame();
     if (currentSubscription != null) {
       currentSubscription.unsubscribe();
       currentSubscription = null;
@@ -111,5 +153,10 @@ public class WebSocketServiceImpl implements WebSocketService {
       session = null;
       log.info("Disconnected from WebSocket completely");
     }
+  }
+
+  @Override
+  public boolean isConnected() {
+    return session != null && session.isConnected();
   }
 }

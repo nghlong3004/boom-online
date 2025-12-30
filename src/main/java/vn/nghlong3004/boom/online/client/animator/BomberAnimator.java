@@ -16,8 +16,8 @@ public class BomberAnimator {
 
   private static final int ANIMATION_FRAMES = 5;
   private static final int DEATH_FRAMES = 4;
-  private static final int ANIMATION_SPEED = 8;
-  private static final int DEATH_ANIMATION_SPEED = 10;
+  private static final int ANIMATION_SPEED = 15;
+  private static final int DEATH_ANIMATION_SPEED = 15;
 
   private final BufferedImage[][] sprites;
   private final BufferedImage[] deathSprites;
@@ -76,7 +76,7 @@ public class BomberAnimator {
 
   private void resetAnimation() {
     animationTick = 0;
-    animationFrame = 0;
+    animationFrame = 2;
   }
 
   private BufferedImage getWalkFrame(Direction direction) {

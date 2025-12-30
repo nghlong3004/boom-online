@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.Map;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.core.state.GameState;
@@ -21,7 +22,7 @@ import vn.nghlong3004.boom.online.client.input.MouseAdapter;
 @Slf4j
 public class GameContext implements GameLogic, MouseAdapter, KeyboardAdapter {
 
-  private GameState state;
+  @Getter private GameState state;
   @Setter private Map<GameStateType, GameState> stateMap;
 
   private GameContext() {}

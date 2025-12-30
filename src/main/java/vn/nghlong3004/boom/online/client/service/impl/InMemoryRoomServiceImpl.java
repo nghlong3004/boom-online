@@ -48,6 +48,7 @@ public class InMemoryRoomServiceImpl implements RoomService {
                 .occupied(true)
                 .bot(false)
                 .userId(owner.getId())
+                .username(owner.getEmail())
                 .displayName(owner.getDisplayName())
                 .host(true)
                 .ready(true)

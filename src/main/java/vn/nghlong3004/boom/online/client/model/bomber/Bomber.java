@@ -1,5 +1,6 @@
 package vn.nghlong3004.boom.online.client.model.bomber;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import vn.nghlong3004.boom.online.client.constant.GameConstant;
@@ -12,10 +13,12 @@ import vn.nghlong3004.boom.online.client.constant.GameConstant;
  */
 @Getter
 @Setter
+@Builder
 public class Bomber {
 
   private static final float DEFAULT_SPEED = 0.6f;
-  private static final int DEFAULT_LIVES = 3;
+  private static final int DEFAULT_LIVES = 1;
+  private static final int INVINCIBILITY_FRAMES = 120; // 2 seconds at 60 FPS
 
   private final int playerIndex;
   private final Long userId;
@@ -24,27 +27,14 @@ public class Bomber {
 
   private float x;
   private float y;
-  private float speed;
+  @Builder.Default private float speed = DEFAULT_SPEED;
+  @Builder.Default private Direction direction = Direction.DOWN;
 
-  private Direction direction;
-  private BomberState state;
+  @Builder.Default private BomberState state = BomberState.IDLE;
+  @Builder.Default private int lives = DEFAULT_LIVES;
 
-  private int lives;
-  private boolean alive;
-
-  private Bomber(Builder builder) {
-    this.playerIndex = builder.playerIndex;
-    this.userId = builder.userId;
-    this.displayName = builder.displayName;
-    this.bomberType = builder.bomberType;
-    this.x = builder.spawnX;
-    this.y = builder.spawnY;
-    this.speed = DEFAULT_SPEED;
-    this.direction = Direction.DOWN;
-    this.state = BomberState.IDLE;
-    this.lives = DEFAULT_LIVES;
-    this.alive = true;
-  }
+  @Builder.Default private boolean alive = true;
+  @Builder.Default private int invincibilityTicks = 0;
 
   public void move(Direction newDirection) {
     this.direction = newDirection;
@@ -57,13 +47,32 @@ public class Bomber {
     this.state = BomberState.IDLE;
   }
 
+  public void update() {
+    if (invincibilityTicks > 0) {
+      invincibilityTicks--;
+    }
+  }
+
+  public boolean canBeHit() {
+    return alive && invincibilityTicks <= 0;
+  }
+
+  public boolean isInvincible() {
+    return invincibilityTicks > 0;
+  }
+
   public void die() {
+    if (!canBeHit()) {
+      return;
+    }
+
     this.lives--;
     if (this.lives <= 0) {
       this.alive = false;
       this.state = BomberState.DEAD;
     } else {
       this.state = BomberState.DYING;
+      this.invincibilityTicks = INVINCIBILITY_FRAMES;
     }
   }
 
@@ -88,48 +97,5 @@ public class Bomber {
 
   public float getCenterY() {
     return y + GameConstant.TILE_SIZE / 2.0f;
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private int playerIndex;
-    private Long userId;
-    private String displayName;
-    private BomberType bomberType;
-    private float spawnX;
-    private float spawnY;
-
-    public Builder playerIndex(int playerIndex) {
-      this.playerIndex = playerIndex;
-      return this;
-    }
-
-    public Builder userId(Long userId) {
-      this.userId = userId;
-      return this;
-    }
-
-    public Builder displayName(String displayName) {
-      this.displayName = displayName;
-      return this;
-    }
-
-    public Builder bomberType(BomberType bomberType) {
-      this.bomberType = bomberType;
-      return this;
-    }
-
-    public Builder spawnPosition(float x, float y) {
-      this.spawnX = x;
-      this.spawnY = y;
-      return this;
-    }
-
-    public Bomber build() {
-      return new Bomber(this);
-    }
   }
 }

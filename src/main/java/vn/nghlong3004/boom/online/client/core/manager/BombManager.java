@@ -1,4 +1,4 @@
-package vn.nghlong3004.boom.online.client.core;
+package vn.nghlong3004.boom.online.client.core.manager;
 
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import vn.nghlong3004.boom.online.client.model.bomber.Direction;
 import vn.nghlong3004.boom.online.client.model.map.GameMap;
 import vn.nghlong3004.boom.online.client.renderer.BombRenderer;
 import vn.nghlong3004.boom.online.client.renderer.ExplosionRenderer;
+import vn.nghlong3004.boom.online.client.session.GameSession;
 
 /**
  * Project: boom-online-client
@@ -25,6 +26,7 @@ import vn.nghlong3004.boom.online.client.renderer.ExplosionRenderer;
 public class BombManager {
 
   private static final int DEFAULT_MAX_BOMBS = 1;
+  private static final int DEFAULT_POWER = 1;
 
   private final List<Bomb> bombs;
   private final List<Explosion> explosions;
@@ -32,8 +34,7 @@ public class BombManager {
   private final BombRenderer bombRenderer;
   private final GameMap gameMap;
 
-  @Setter
-  private int maxBombs;
+  @Setter private int maxBombs;
 
   public BombManager(GameMap gameMap) {
     this.bombs = new ArrayList<>();
@@ -60,10 +61,28 @@ public class BombManager {
     }
 
     Bomb bomb =
-        Bomb.builder().tileX(tileX).tileY(tileY).power(1).ownerId(bomber.getUserId()).build();
+        Bomb.builder()
+            .tileX(tileX)
+            .tileY(tileY)
+            .power(DEFAULT_POWER)
+            .ownerId(bomber.getUserId())
+            .build();
 
     bombs.add(bomb);
+
+    GameSession.getInstance().sendPlaceBomb(tileX, tileY, DEFAULT_POWER);
+
     return true;
+  }
+
+  public void placeBombFromNetwork(int tileX, int tileY, int power, Long ownerId) {
+    if (hasBombAt(tileX, tileY)) {
+      return;
+    }
+
+    Bomb bomb = Bomb.builder().tileX(tileX).tileY(tileY).power(power).ownerId(ownerId).build();
+
+    bombs.add(bomb);
   }
 
   public void update() {

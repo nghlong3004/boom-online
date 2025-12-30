@@ -7,6 +7,12 @@ import vn.nghlong3004.boom.online.client.constant.GameConstant;
 import vn.nghlong3004.boom.online.client.model.map.GameMap;
 import vn.nghlong3004.boom.online.client.model.map.TileType;
 
+/**
+ * Project: boom-online-client
+ *
+ * @author nghlong3004
+ * @since 12/29/2025
+ */
 public class MapRenderer {
 
   private final BufferedImage[][] tileImages;

@@ -1,4 +1,4 @@
-package vn.nghlong3004.boom.online.client.core;
+package vn.nghlong3004.boom.online.client.core.manager;
 
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -18,6 +18,8 @@ import vn.nghlong3004.boom.online.client.model.bomber.Direction;
 import vn.nghlong3004.boom.online.client.model.map.GameMap;
 import vn.nghlong3004.boom.online.client.model.playing.PlayerInfo;
 import vn.nghlong3004.boom.online.client.renderer.BomberRenderer;
+import vn.nghlong3004.boom.online.client.session.GameSession;
+import vn.nghlong3004.boom.online.client.session.UserSession;
 
 /**
  * Project: boom-online-client
@@ -28,21 +30,26 @@ import vn.nghlong3004.boom.online.client.renderer.BomberRenderer;
 public class BomberManager {
 
   private static final float[][] SPAWN_POSITIONS = {
-      { 1, 1 },
-      { PlayingConstant.MAP_COLUMNS - 2, 1 },
-      { 1, PlayingConstant.MAP_ROWS - 2 },
-      { PlayingConstant.MAP_COLUMNS - 2, PlayingConstant.MAP_ROWS - 2 }
+    {1, 1},
+    {PlayingConstant.MAP_COLUMNS - 2, 1},
+    {1, PlayingConstant.MAP_ROWS - 2},
+    {PlayingConstant.MAP_COLUMNS - 2, PlayingConstant.MAP_ROWS - 2}
   };
+
+  private static final int SYNC_INTERVAL = 3;
 
   private final List<Bomber> bombers;
   private final Map<Integer, BomberRenderer> renderers;
   private final InputHandler inputHandler;
   private final CollisionDetector collisionDetector;
 
-  @Getter
-  private Bomber localBomber;
-  @Getter
-  private int localPlayerIndex;
+  @Getter private Bomber localBomber;
+  @Getter private int localPlayerIndex;
+
+  private int syncTick;
+  private float lastSyncX;
+  private float lastSyncY;
+  private Direction lastSyncDirection;
 
   public BomberManager(GameMap gameMap) {
     this.bombers = new ArrayList<>();
@@ -50,6 +57,7 @@ public class BomberManager {
     this.inputHandler = new InputHandler();
     this.collisionDetector = new CollisionDetector(gameMap);
     this.localPlayerIndex = -1;
+    this.syncTick = 0;
   }
 
   public void initializeBombers(List<PlayerInfo> players, String localUserId) {
@@ -62,20 +70,22 @@ public class BomberManager {
       PlayerInfo player = players.get(i);
       float[] spawnPos = getSpawnPosition(i);
 
-      Bomber bomber = Bomber.builder()
-          .playerIndex(i)
-          .userId(player.getUserId())
-          .displayName(player.getDisplayName())
-          .spawnPosition(
-              spawnPos[0] * GameConstant.TILE_SIZE, spawnPos[1] * GameConstant.TILE_SIZE)
-          .build();
+      Bomber bomber =
+          Bomber.builder()
+              .playerIndex(i)
+              .userId(player.getUserId())
+              .displayName(player.getDisplayName())
+              .x(spawnPos[0] * GameConstant.TILE_SIZE)
+              .y(spawnPos[1] * GameConstant.TILE_SIZE)
+              .build();
 
       bombers.add(bomber);
       renderers.put(i, new BomberRenderer(player.getCharacterIndex()));
 
-      boolean isLocalPlayer = localUserId.equals("offline-player")
-          ? player.isHost()
-          : String.valueOf(player.getUserId()).equals(localUserId);
+      boolean isLocalPlayer =
+          localUserId.equals("offline-player")
+              ? player.isHost()
+              : player.getUserId().equals(UserSession.getInstance().getCurrentUser().getId());
 
       if (isLocalPlayer && localBomber == null) {
         localBomber = bomber;
@@ -88,18 +98,21 @@ public class BomberManager {
     if (playerIndex >= 0 && playerIndex < SPAWN_POSITIONS.length) {
       return SPAWN_POSITIONS[playerIndex];
     }
-    return new float[] { 1, 1 };
+    return new float[] {1, 1};
   }
 
   public void update() {
     updateLocalBomber();
     updateAllBombers();
+    syncLocalBomberPosition();
   }
 
   private void updateLocalBomber() {
     if (localBomber == null || !localBomber.isAlive()) {
       return;
     }
+
+    localBomber.update();
 
     Direction direction = inputHandler.getCurrentDirection();
 
@@ -115,9 +128,36 @@ public class BomberManager {
     }
   }
 
+  private void syncLocalBomberPosition() {
+    if (localBomber == null || !GameSession.getInstance().isOnline()) {
+      return;
+    }
+
+    syncTick++;
+    if (syncTick < SYNC_INTERVAL) {
+      return;
+    }
+    syncTick = 0;
+
+    boolean positionChanged =
+        localBomber.getX() != lastSyncX
+            || localBomber.getY() != lastSyncY
+            || localBomber.getDirection() != lastSyncDirection;
+
+    if (positionChanged) {
+      lastSyncX = localBomber.getX();
+      lastSyncY = localBomber.getY();
+      lastSyncDirection = localBomber.getDirection();
+
+      GameSession.getInstance()
+          .sendMove(localBomber.getX(), localBomber.getY(), localBomber.getDirection().name());
+    }
+  }
+
   private void updateAllBombers() {
     for (int i = 0; i < bombers.size(); i++) {
       Bomber bomber = bombers.get(i);
+      bomber.update();
       BomberRenderer renderer = renderers.get(i);
       if (renderer != null) {
         renderer.update(bomber);
@@ -155,6 +195,18 @@ public class BomberManager {
 
   public Bomber getBomberByUserId(Long userId) {
     return bombers.stream().filter(b -> b.getUserId().equals(userId)).findFirst().orElse(null);
+  }
+
+  public int getAliveCount() {
+    return (int) bombers.stream().filter(Bomber::isAlive).count();
+  }
+
+  public Bomber getLastAlive() {
+    return bombers.stream().filter(Bomber::isAlive).findFirst().orElse(null);
+  }
+
+  public boolean isLocalPlayerAlive() {
+    return localBomber != null && localBomber.isAlive();
   }
 
   public void updateBomberPosition(Long userId, float x, float y, Direction direction) {

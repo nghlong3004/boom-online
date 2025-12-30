@@ -40,7 +40,7 @@ public class LobbyPanel extends JPanel {
   private final WebSocketService webSocketService;
   private final RoomService roomService;
   private final String modalId;
-  private RoomPanel roomPanel;
+  @Getter private RoomPanel roomPanel;
 
   private final StartButton btnCreate;
   private final StartButton btnRefresh;

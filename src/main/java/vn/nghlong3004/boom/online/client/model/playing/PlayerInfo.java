@@ -8,16 +8,14 @@ import lombok.Getter;
 @Builder
 public class PlayerInfo {
 
-    private final int slotIndex;
-    private final Long userId;
-    private final String displayName;
-    private final int characterIndex;
-    private final boolean host;
-    private final BufferedImage avatar;
+  private final int slotIndex;
+  private final Long userId;
+  private final String displayName;
+  private final int characterIndex;
+  private final boolean host;
+  private final BufferedImage avatar;
 
-    @Builder.Default
-    private int lives = 3;
+  @Builder.Default private int lives = 1;
 
-    @Builder.Default
-    private boolean alive = true;
+  @Builder.Default private boolean alive = true;
 }
