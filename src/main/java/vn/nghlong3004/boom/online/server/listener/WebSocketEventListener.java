@@ -1,6 +1,7 @@
 package vn.nghlong3004.boom.online.server.listener;
 
 import java.security.Principal;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -34,7 +35,7 @@ public class WebSocketEventListener {
       StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 
       String sessionId = headerAccessor.getSessionId();
-      String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
+      String roomId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("roomId");
       String playerId = (String) headerAccessor.getSessionAttributes().get("playerId");
 
       if (roomId != null && playerId != null) {

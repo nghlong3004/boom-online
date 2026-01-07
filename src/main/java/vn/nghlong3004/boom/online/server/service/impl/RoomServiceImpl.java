@@ -223,7 +223,7 @@ public class RoomServiceImpl implements RoomService {
   @Override
   @Transactional
   public void handleUserDisconnection(String username) {
-    var roomOptional = roomRepository.findRoomByUsername(username);
+    var roomOptional = roomRepository.findFirstBySlotsUsernameAndSlotsOccupiedTrue(username);
 
     if (roomOptional.isPresent()) {
       Room room = roomOptional.get();
@@ -411,7 +411,6 @@ public class RoomServiceImpl implements RoomService {
   }
 
   private void broadcastRoomUpdate(Room room) {
-    log.info("Broadcasting room update for ID: {}", room.getId());
     String destination = "/topic/room/" + room.getId();
     messagingTemplate.convertAndSend(destination, room);
   }
