@@ -47,8 +47,9 @@ public class MapRenderer {
 
   private int mapTileValueToTileType(int tileValue) {
     return switch (tileValue) {
-      case 0, 2 -> TileType.STONE.id;
-      case 3 -> TileType.BRICK.id;
+      case 0 -> TileType.STONE.id;
+      case 2 -> TileType.BRICK.id;
+      case 3 -> TileType.GIFT_BOX.id;
       default -> TileType.FLOOR.id;
     };
   }

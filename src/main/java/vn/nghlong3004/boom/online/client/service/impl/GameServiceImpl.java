@@ -6,6 +6,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.model.game.GameActionType;
 import vn.nghlong3004.boom.online.client.model.game.GameEndData;
+import vn.nghlong3004.boom.online.client.model.game.BrickDestroyedData;
+import vn.nghlong3004.boom.online.client.model.game.ItemCollectedData;
 import vn.nghlong3004.boom.online.client.model.game.MoveData;
 import vn.nghlong3004.boom.online.client.model.game.PlaceBombData;
 import vn.nghlong3004.boom.online.client.model.game.PlayerHitData;
@@ -67,6 +69,20 @@ public class GameServiceImpl implements GameService {
     GameEndData data = new GameEndData(winnerId, reason);
     sendAction(GameActionType.GAME_END, data);
     log.info("Sent game end - winnerId: {}, reason: {}", winnerId, reason);
+  }
+
+  @Override
+  public void sendBrickDestroyed(int tileX, int tileY, int tileType) {
+    BrickDestroyedData data = new BrickDestroyedData(tileX, tileY, tileType);
+    sendAction(GameActionType.BRICK_DESTROYED, data);
+    log.debug("Sent brick destroyed at ({}, {}) tileType={}", tileX, tileY, tileType);
+  }
+
+  @Override
+  public void sendItemCollected(String itemId, int tileX, int tileY) {
+    ItemCollectedData data = new ItemCollectedData(itemId, tileX, tileY);
+    sendAction(GameActionType.ITEM_COLLECTED, data);
+    log.debug("Sent item collected: {} at ({}, {})", itemId, tileX, tileY);
   }
 
   @Override

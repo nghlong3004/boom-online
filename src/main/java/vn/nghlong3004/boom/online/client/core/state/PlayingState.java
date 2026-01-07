@@ -1,20 +1,20 @@
 package vn.nghlong3004.boom.online.client.core.state;
 
+import com.google.gson.Gson;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import raven.modal.ModalDialog;
 import vn.nghlong3004.boom.online.client.core.GameContext;
 import vn.nghlong3004.boom.online.client.core.GamePanel;
 import vn.nghlong3004.boom.online.client.core.manager.BombManager;
 import vn.nghlong3004.boom.online.client.core.manager.BomberManager;
+import vn.nghlong3004.boom.online.client.core.manager.ItemManager;
 import vn.nghlong3004.boom.online.client.model.bomber.Direction;
-import vn.nghlong3004.boom.online.client.model.game.GameActionType;
-import vn.nghlong3004.boom.online.client.model.game.GameResult;
+import vn.nghlong3004.boom.online.client.model.game.*;
 import vn.nghlong3004.boom.online.client.model.map.GameMap;
 import vn.nghlong3004.boom.online.client.model.playing.PlayerInfo;
 import vn.nghlong3004.boom.online.client.model.response.GameUpdate;
@@ -43,15 +43,19 @@ public class PlayingState implements GameState {
   private final TimerRenderer timerRenderer;
   private final SpectatorDialogRenderer spectatorDialog;
   private final GamePanel gamePanel;
+  private final Gson gson;
+
   private BomberManager bomberManager;
   private BombManager bombManager;
+  private ItemManager itemManager;
   private boolean initialized;
   private GameResult gameResult;
   private boolean gameEnded;
   private boolean spectating;
   private boolean localPlayerDied;
 
-  public PlayingState(GamePanel gamePanel) {
+  public PlayingState(GamePanel gamePanel, Gson gson) {
+    this.gson = gson;
     this.gamePanel = gamePanel;
     this.mapRenderer = new MapRenderer();
     this.hudRenderer = new HudRenderer();
@@ -76,6 +80,7 @@ public class PlayingState implements GameState {
     PlayingSession.getInstance().clear();
     bomberManager = null;
     bombManager = null;
+    itemManager = null;
     initialized = false;
     gameResult = null;
     gameEnded = false;
@@ -114,6 +119,14 @@ public class PlayingState implements GameState {
       checkExplosionCollisions();
     }
 
+    if (itemManager != null) {
+      itemManager.update();
+      if (bomberManager != null && bomberManager.getLocalBomber() != null) {
+        boolean isOnline = GameSession.getInstance().isOnline();
+        itemManager.checkCollision(bomberManager.getLocalBomber(), isOnline);
+      }
+    }
+
     checkLocalPlayerDeath();
     checkGameEnd();
   }
@@ -129,12 +142,39 @@ public class PlayingState implements GameState {
   private void initializeManagers() {
     GameMap gameMap = getGameMap();
     List<PlayerInfo> players = getPlayers();
-    String localUserId = getCurrentUsename();
+    String localUserId = getCurrentUsername();
 
     bomberManager = new BomberManager(gameMap);
     bomberManager.initializeBombers(players, localUserId);
 
+    itemManager = new ItemManager();
+    itemManager.setOnItemCollectedNetwork(this::onItemCollectedNetwork);
+
     bombManager = new BombManager(gameMap);
+    bombManager.setOnBrickDestroyed(this::onBrickDestroyed);
+    bombManager.setOnExplosionAt(this::onExplosionAt);
+  }
+
+  private void onBrickDestroyed(int tileX, int tileY, int tileType) {
+    if (itemManager == null) {
+      return;
+    }
+
+    if (GameSession.getInstance().isOnline()) {
+      GameSession.getInstance().sendBrickDestroyed(tileX, tileY, tileType);
+    } else {
+      itemManager.spawnItemAt(tileX, tileY, tileType);
+    }
+  }
+
+  private void onItemCollectedNetwork(String itemId, int tileX, int tileY) {
+    GameSession.getInstance().sendItemCollected(itemId, tileX, tileY);
+  }
+
+  private void onExplosionAt(int tileX, int tileY) {
+    if (itemManager != null) {
+      itemManager.destroyItemsAt(tileX, tileY);
+    }
   }
 
   private void initializeOnlineGame() {
@@ -268,7 +308,7 @@ public class PlayingState implements GameState {
     String reason = "game_ended";
 
     if (result == GameResult.WIN) {
-      winnerId = getCurrentUsename();
+      winnerId = getCurrentUsername();
       reason = "last_player_standing";
     } else if (result == GameResult.LOSE && bomberManager != null) {
       var lastAlive = bomberManager.getLastAlive();
@@ -288,36 +328,39 @@ public class PlayingState implements GameState {
       return;
     }
 
-    if (update.type() == GameActionType.GAME_END) {
-      handleGameEndUpdate(update);
+    String localUserId = getCurrentUsername();
+    log.info(
+        "update with action type :{}, updateId: {}, localID: {}",
+        update.type(),
+        update.playerId(),
+        localUserId);
+    if (update.playerId() != null
+        && update.playerId().equals(localUserId)
+        && update.type() != GameActionType.ITEM_COLLECTED) {
       return;
     }
-
-    String localUserId = getCurrentUsename();
-    if (update.playerId() != null && update.playerId().equals(localUserId)) {
-      return;
-    }
-
     switch (update.type()) {
       case MOVE -> handleMoveUpdate(update);
       case PLACE_BOMB -> handlePlaceBombUpdate(update);
       case PLAYER_HIT -> handlePlayerHitUpdate(update);
       case PLAYER_DIED -> handlePlayerDiedUpdate(update);
+      case ITEM_SPAWNED -> handleItemSpawnedUpdate(update);
+      case ITEM_COLLECTED -> handleItemCollectedUpdate(update);
+      case GAME_END -> handleGameEndUpdate(update);
       default -> log.debug("Unhandled game update type: {}", update.type());
     }
   }
 
-  @SuppressWarnings("unchecked")
   private void handleMoveUpdate(GameUpdate update) {
     if (bomberManager == null || update.data() == null) {
       return;
     }
 
     try {
-      Map<String, Object> data = (Map<String, Object>) update.data();
-      float x = ((Number) data.get("x")).floatValue();
-      float y = ((Number) data.get("y")).floatValue();
-      String directionStr = (String) data.get("direction");
+      MoveData data = gson.fromJson(gson.toJsonTree(update.data()), MoveData.class);
+      float x = data.x();
+      float y = data.y();
+      String directionStr = data.direction();
       Direction direction = Direction.valueOf(directionStr);
 
       Long userId = Long.parseLong(update.playerId());
@@ -327,35 +370,30 @@ public class PlayingState implements GameState {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private void handlePlaceBombUpdate(GameUpdate update) {
     if (bombManager == null || update.data() == null) {
       return;
     }
 
     try {
-      Map<String, Object> data = (Map<String, Object>) update.data();
-      int tileX = ((Number) data.get("tileX")).intValue();
-      int tileY = ((Number) data.get("tileY")).intValue();
-      int power = ((Number) data.get("power")).intValue();
+      PlaceBombData data = gson.fromJson(gson.toJsonTree(update.data()), PlaceBombData.class);
+
       Long ownerId = Long.parseLong(update.playerId());
 
-      bombManager.placeBombFromNetwork(tileX, tileY, power, ownerId);
+      bombManager.placeBombFromNetwork(data.tileX(), data.tileY(), data.power(), ownerId);
     } catch (Exception e) {
       log.error("Failed to handle place bomb update", e);
     }
   }
 
-  @SuppressWarnings("unchecked")
   private void handlePlayerHitUpdate(GameUpdate update) {
     if (bomberManager == null || update.data() == null) {
       return;
     }
 
     try {
-      Map<String, Object> data = (Map<String, Object>) update.data();
-      String playerId = (String) data.get("playerId");
-      Long userId = Long.parseLong(playerId);
+      PlayerHitData data = gson.fromJson(gson.toJsonTree(update.data()), PlayerHitData.class);
+      Long userId = Long.parseLong(data.playerId());
       bomberManager.handleBomberDeath(userId);
     } catch (Exception e) {
       log.error("Failed to handle player hit update", e);
@@ -375,30 +413,82 @@ public class PlayingState implements GameState {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  private void handleItemSpawnedUpdate(GameUpdate update) {
+    if (itemManager == null || update.data() == null) {
+      return;
+    }
+
+    try {
+      ItemSpawnedData data = gson.fromJson(gson.toJsonTree(update.data()), ItemSpawnedData.class);
+      String itemId = data.itemId();
+      int tileX = data.tileX();
+      int tileY = data.tileY();
+      int itemType = data.itemType();
+
+      itemManager.spawnItemFromNetwork(itemId, tileX, tileY, itemType);
+      log.debug("Item spawned from server: {} at ({}, {}) type={}", itemId, tileX, tileY, itemType);
+    } catch (Exception e) {
+      log.error("Failed to handle item spawned update", e);
+    }
+  }
+
+  private void handleItemCollectedUpdate(GameUpdate update) {
+    if (itemManager == null || update.data() == null) {
+      log.warn("handleItemCollectedUpdate: itemManager={} data={}", itemManager, update.data());
+      return;
+    }
+
+    try {
+      ItemCollectedData data = gson.fromJson(gson.toJsonTree(update.data()), ItemCollectedData.class);
+      String collectorId = update.playerId();
+
+      String localUserId = getCurrentUsername();
+      log.info(
+          "ITEM_COLLECTED received: itemId={}, collectorId={}, localUserId={}",
+          data.itemId(),
+          collectorId,
+          localUserId);
+
+      if (collectorId != null && collectorId.equals(localUserId)) {
+        log.info("This is MY item collection - applying effect");
+        if (bomberManager != null && bomberManager.getLocalBomber() != null) {
+          itemManager.applyItemEffect(data.itemId(), bomberManager.getLocalBomber());
+        } else {
+          log.warn("bomberManager={} localBomber={}", bomberManager, null);
+        }
+      } else {
+        log.info("Other player collected item - just removing from map");
+        itemManager.collectItemFromNetwork(data.itemId(), data.tileX(), data.tileY());
+      }
+    } catch (Exception e) {
+      log.error("Failed to handle item collected update", e);
+    }
+  }
+
   private void handleGameEndUpdate(GameUpdate update) {
     if (gameEnded) {
       return;
     }
 
     try {
-      Map<String, Object> data = (Map<String, Object>) update.data();
-      String winnerId = data != null ? (String) data.get("winnerId") : null;
-      String reason = data != null ? (String) data.get("reason") : "unknown";
+      GameEndData data = gson.fromJson(gson.toJsonTree(update.data()), GameEndData.class);
 
-      String localUserId = getCurrentUsename();
+      String localUserId = getCurrentUsername();
       GameResult result;
-      log.info("winner info: {}", winnerId);
-      if (winnerId == null || winnerId.isEmpty()) {
+      log.info("winner info: {}", data.winnerId());
+      if (data.winnerId() == null || data.winnerId().isEmpty()) {
         result = GameResult.DRAW;
-      } else if (winnerId.equals(localUserId)) {
+      } else if (data.winnerId().equals(localUserId)) {
         result = GameResult.WIN;
       } else {
         result = GameResult.LOSE;
       }
 
       log.info(
-          "Game ended from server - winner: {}, reason: {}, result: {}", winnerId, reason, result);
+          "Game ended from server - winner: {}, reason: {}, result: {}",
+          data.winnerId(),
+          data.reason(),
+          result);
       spectatorDialog.hide();
       endGame(result, false);
     } catch (Exception e) {
@@ -411,19 +501,6 @@ public class PlayingState implements GameState {
   private void checkExplosionCollisions() {
     if (bomberManager == null || bombManager == null) {
       return;
-    }
-
-    var explosions = bombManager.getActiveExplosions();
-    if (!explosions.isEmpty()) {
-      var localBomber = bomberManager.getLocalBomber();
-      if (localBomber != null) {
-        log.info(
-            "Explosions: {}, Local bomber at tile ({}, {}), canBeHit: {}",
-            explosions.size(),
-            localBomber.getTileX(),
-            localBomber.getTileY(),
-            localBomber.canBeHit());
-      }
     }
 
     bomberManager
@@ -442,9 +519,9 @@ public class PlayingState implements GameState {
             });
   }
 
-  private String getCurrentUsename() {
+  private String getCurrentUsername() {
     if (UserSession.getInstance().getCurrentUser() != null) {
-      return String.valueOf(UserSession.getInstance().getCurrentUser().getEmail());
+      return String.valueOf(UserSession.getInstance().getCurrentUser().getId());
     }
     return "offline-player";
   }
@@ -453,12 +530,14 @@ public class PlayingState implements GameState {
   public void render(Graphics g) {
     Graphics2D g2d = (Graphics2D) g;
     renderMap(g2d);
+    renderItems(g2d);
     renderBombs(g2d);
     renderBombers(g2d);
-    renderTimer(g2d);
     renderHud(g);
     if (gameEnded && gameResult != null) {
       resultRenderer.render(g2d, gameResult);
+    } else {
+      renderTimer(g2d);
     }
 
     if (spectatorDialog.isVisible()) {
@@ -516,9 +595,7 @@ public class PlayingState implements GameState {
           previous(GameContext.getInstance());
         }
       }
-      case KeyEvent.VK_ESCAPE -> {
-        previous(GameContext.getInstance());
-      }
+      case KeyEvent.VK_ESCAPE -> previous(GameContext.getInstance());
     }
   }
 
@@ -542,6 +619,12 @@ public class PlayingState implements GameState {
     GameMap gameMap = getGameMap();
     if (gameMap != null) {
       mapRenderer.render(g2d, gameMap);
+    }
+  }
+
+  private void renderItems(Graphics2D g2d) {
+    if (itemManager != null) {
+      itemManager.render(g2d);
     }
   }
 

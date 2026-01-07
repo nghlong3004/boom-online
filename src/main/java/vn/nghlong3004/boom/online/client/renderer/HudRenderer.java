@@ -10,6 +10,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import vn.nghlong3004.boom.online.client.constant.AnimationConstant;
 import vn.nghlong3004.boom.online.client.constant.GameConstant;
 import vn.nghlong3004.boom.online.client.constant.PlayingConstant;
 import vn.nghlong3004.boom.online.client.model.playing.PlayerInfo;
@@ -22,6 +23,12 @@ import vn.nghlong3004.boom.online.client.session.UserSession;
  * @since 12/29/2025
  */
 public class HudRenderer {
+
+  private static final String[] ICONS =
+      new String[] {"\uD83D\uDE12", "\uD83D\uDE0E", "\uD83D\uDE08", "\uD83D\uDE0F"};
+
+  private static final int EMOTION_OFFSET_X = 10;
+  private static final int EMOTION_OFFSET_Y = 14;
 
   private static final Color BACKGROUND_START = new Color(25, 25, 35, 240);
   private static final Color BACKGROUND_END = new Color(40, 40, 55, 240);
@@ -36,6 +43,7 @@ public class HudRenderer {
 
   private static final Font NAME_FONT = new Font("SansSerif", Font.BOLD, 13);
   private static final Font SLOT_FONT = new Font("SansSerif", Font.BOLD, 11);
+  private static final Font EMOTION_FONT = new Font("SansSerif", Font.PLAIN, 20);
 
   public void render(Graphics g, List<PlayerInfo> players) {
     Graphics2D g2d = (Graphics2D) g;
@@ -87,7 +95,7 @@ public class HudRenderer {
     renderCardBackground(g2d, cardX, cardY, cardWidth, cardHeight, playerColor);
 
     if (player != null) {
-      renderPlayerContent(g2d, player, index, cardX, cardY, cardWidth, cardHeight, playerColor);
+      renderPlayerContent(g2d, player, cardX, cardY, cardWidth, cardHeight);
     } else {
       renderEmptySlot(g2d, index, cardX, cardY, cardWidth, cardHeight);
     }
@@ -108,14 +116,7 @@ public class HudRenderer {
   }
 
   private void renderPlayerContent(
-      Graphics2D g2d,
-      PlayerInfo player,
-      int index,
-      int cardX,
-      int cardY,
-      int cardWidth,
-      int cardHeight,
-      Color playerColor) {
+      Graphics2D g2d, PlayerInfo player, int cardX, int cardY, int cardWidth, int cardHeight) {
 
     int padding = PlayingConstant.PLAYER_CARD_PADDING;
     int avatarSize = PlayingConstant.AVATAR_SIZE;
@@ -125,15 +126,13 @@ public class HudRenderer {
 
     renderAvatar(g2d, player, avatarX, avatarY, avatarSize);
 
-    int textY = avatarY + avatarSize + padding;
+    int textY = avatarY + avatarSize + padding + 8;
     renderPlayerName(g2d, player, cardX, textY, cardWidth);
 
-    int healthY = textY + 18;
+    int healthY = textY + 10;
     renderHealthBar(g2d, player, cardX + padding, healthY, cardWidth - padding * 2);
 
-    if (player.getUserId().equals(UserSession.getInstance().getCurrentUser().getId())) {
-      renderHostBadge(g2d, avatarX + avatarSize - 12, avatarY - 4);
-    }
+    renderEmotion(g2d, player, avatarX + avatarSize - 12, avatarY - 4);
 
     if (!player.isAlive()) {
       renderDeadOverlay(g2d, cardX, cardY, cardWidth, cardHeight);
@@ -161,7 +160,9 @@ public class HudRenderer {
     String name = truncateName(player.getDisplayName(), 12);
     int textWidth = g2d.getFontMetrics().stringWidth(name);
     int textX = cardX + (cardWidth - textWidth) / 2;
-
+    if (player.getUserId().equals(UserSession.getInstance().getCurrentUser().getId())) {
+      g2d.setColor(HOST_BADGE_COLOR);
+    }
     g2d.drawString(name, textX, y);
   }
 
@@ -174,7 +175,7 @@ public class HudRenderer {
     g2d.fillRoundRect(barX, y, barWidth, barHeight, 4, 4);
 
     if (player.isAlive() && player.getLives() > 0) {
-      int maxLives = 3;
+      int maxLives = 1;
       int filledWidth = (int) ((player.getLives() / (float) maxLives) * barWidth);
       g2d.setColor(HEALTH_COLOR);
       g2d.fillRoundRect(barX, y, filledWidth, barHeight, 4, 4);
@@ -187,10 +188,18 @@ public class HudRenderer {
     g2d.drawString(livesText, barX + (barWidth - textWidth) / 2, y + barHeight + 14);
   }
 
-  private void renderHostBadge(Graphics2D g2d, int x, int y) {
-    g2d.setColor(HOST_BADGE_COLOR);
-    g2d.setFont(new Font("SansSerif", Font.PLAIN, 16));
-    g2d.drawString("me", x, y + 14);
+  private void renderEmotion(Graphics2D g2d, PlayerInfo player, int x, int y) {
+    long currentTime = System.currentTimeMillis();
+
+    int individualizedIndex =
+        (int)
+            (((currentTime + player.getSlotIndex() * AnimationConstant.EMOTION_DURATION_MS)
+                    / AnimationConstant.EMOTION_DURATION_MS)
+                % ICONS.length);
+
+    g2d.setFont(EMOTION_FONT);
+    g2d.setColor(Color.WHITE);
+    g2d.drawString(ICONS[individualizedIndex], x + EMOTION_OFFSET_X, y + EMOTION_OFFSET_Y);
   }
 
   private void renderEmptySlot(

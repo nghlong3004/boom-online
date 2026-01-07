@@ -19,17 +19,21 @@ public class GameSession {
 
   private static final int DEFAULT_GAME_DURATION_SECONDS = 180;
 
-  @Setter private GameService gameService;
+  @Setter
+  private GameService gameService;
 
-  @Setter private String roomId;
+  @Setter
+  private String roomId;
 
-  @Setter private Consumer<GameUpdate> gameUpdateHandler;
+  @Setter
+  private Consumer<GameUpdate> gameUpdateHandler;
 
   private boolean online;
   private boolean gameRunning;
   private long startTimeMillis;
   private int gameDurationSeconds;
-  @Setter private Runnable onTimeExpired;
+  @Setter
+  private Runnable onTimeExpired;
   private boolean timeExpiredFired;
 
   private GameSession() {
@@ -111,10 +115,6 @@ public class GameSession {
     return String.format("%d:%02d", minutes, secs);
   }
 
-  public void setGameDuration(int seconds) {
-    this.gameDurationSeconds = seconds;
-  }
-
   public void sendMove(float x, float y, String direction) {
     if (online && gameService != null) {
       gameService.sendMove(x, y, direction);
@@ -131,6 +131,18 @@ public class GameSession {
     if (online && gameService != null) {
       log.info("Send playerHit by playerId:{}", playerId);
       gameService.sendPlayerHit(playerId);
+    }
+  }
+
+  public void sendBrickDestroyed(int tileX, int tileY, int tileType) {
+    if (online && gameService != null) {
+      gameService.sendBrickDestroyed(tileX, tileY, tileType);
+    }
+  }
+
+  public void sendItemCollected(String itemId, int tileX, int tileY) {
+    if (online && gameService != null) {
+      gameService.sendItemCollected(itemId, tileX, tileY);
     }
   }
 

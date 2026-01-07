@@ -14,13 +14,11 @@ import vn.nghlong3004.boom.online.client.loader.ObjectLoader;
 public class ObjectAssets {
 
   private final BufferedImage[] bombAssets;
-  
+
   private final BufferedImage[] explosionAnimationFrameAssets;
 
   private final BufferedImage[][] itemAssets;
-  private final BufferedImage[] itemEffectFramesAssets;
   private final BufferedImage[] moveEffectAssets;
-
 
   public static ObjectAssets getInstance() {
     return ObjectAssets.Holder.INSTANCE;
@@ -30,12 +28,10 @@ public class ObjectAssets {
     bombAssets = ObjectLoader.loadBombAssets();
     explosionAnimationFrameAssets = ObjectLoader.loadExplosionAnimationFrameAssets();
     itemAssets = ObjectLoader.loadItemAssets();
-    itemEffectFramesAssets = ObjectLoader.loadItemEffectFramesAssets();
     moveEffectAssets = ObjectLoader.loadMoveEffectAssets();
   }
 
   private static class Holder {
     private static final ObjectAssets INSTANCE = new ObjectAssets();
   }
-
 }

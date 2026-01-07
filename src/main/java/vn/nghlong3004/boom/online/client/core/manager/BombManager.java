@@ -6,16 +6,20 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import vn.nghlong3004.boom.online.client.model.bomb.Bomb;
 import vn.nghlong3004.boom.online.client.model.bomb.BombState;
 import vn.nghlong3004.boom.online.client.model.bomb.Explosion;
 import vn.nghlong3004.boom.online.client.model.bomber.Bomber;
 import vn.nghlong3004.boom.online.client.model.bomber.Direction;
 import vn.nghlong3004.boom.online.client.model.map.GameMap;
+import vn.nghlong3004.boom.online.client.model.map.TileType;
 import vn.nghlong3004.boom.online.client.renderer.BombRenderer;
 import vn.nghlong3004.boom.online.client.renderer.ExplosionRenderer;
 import vn.nghlong3004.boom.online.client.session.GameSession;
+import vn.nghlong3004.boom.online.client.util.TriConsumer;
 
 /**
  * Project: boom-online-client
@@ -23,10 +27,8 @@ import vn.nghlong3004.boom.online.client.session.GameSession;
  * @author nghlong3004
  * @since 12/29/2025
  */
+@Slf4j
 public class BombManager {
-
-  private static final int DEFAULT_MAX_BOMBS = 1;
-  private static final int DEFAULT_POWER = 1;
 
   private final List<Bomb> bombs;
   private final List<Explosion> explosions;
@@ -34,7 +36,9 @@ public class BombManager {
   private final BombRenderer bombRenderer;
   private final GameMap gameMap;
 
-  @Setter private int maxBombs;
+  @Setter private TriConsumer<Integer, Integer, Integer> onBrickDestroyed;
+
+  @Setter private BiConsumer<Integer, Integer> onExplosionAt;
 
   public BombManager(GameMap gameMap) {
     this.bombs = new ArrayList<>();
@@ -42,37 +46,31 @@ public class BombManager {
     this.explosionRenderers = new HashMap<>();
     this.bombRenderer = new BombRenderer();
     this.gameMap = gameMap;
-    this.maxBombs = DEFAULT_MAX_BOMBS;
   }
 
-  public boolean placeBomb(Bomber bomber) {
+  public void placeBomb(Bomber bomber) {
     int tileX = bomber.getTileX();
     int tileY = bomber.getTileY();
 
     if (hasBombAt(tileX, tileY)) {
-      return false;
+      return;
     }
 
     long bomberBombCount =
         bombs.stream().filter(b -> b.getOwnerId().equals(bomber.getUserId())).count();
 
-    if (bomberBombCount >= maxBombs) {
-      return false;
+    if (bomberBombCount >= bomber.getMaxBombs()) {
+      return;
     }
 
+    int power = bomber.getBombPower();
+
     Bomb bomb =
-        Bomb.builder()
-            .tileX(tileX)
-            .tileY(tileY)
-            .power(DEFAULT_POWER)
-            .ownerId(bomber.getUserId())
-            .build();
+        Bomb.builder().tileX(tileX).tileY(tileY).power(power).ownerId(bomber.getUserId()).build();
 
     bombs.add(bomb);
 
-    GameSession.getInstance().sendPlaceBomb(tileX, tileY, DEFAULT_POWER);
-
-    return true;
+    GameSession.getInstance().sendPlaceBomb(tileX, tileY, power);
   }
 
   public void placeBombFromNetwork(int tileX, int tileY, int power, Long ownerId) {
@@ -111,7 +109,17 @@ public class BombManager {
     explosions.add(explosion);
     explosionRenderers.put(explosion, new ExplosionRenderer());
 
+    notifyExplosionTiles(explosion);
     triggerChainExplosions(explosion);
+  }
+
+  private void notifyExplosionTiles(Explosion explosion) {
+    if (onExplosionAt == null) {
+      return;
+    }
+    for (int[] tile : explosion.getAffectedTiles()) {
+      onExplosionAt.accept(tile[0], tile[1]);
+    }
   }
 
   private int calculateExplosionRange(int startX, int startY, Direction direction, int maxPower) {
@@ -125,16 +133,24 @@ public class BombManager {
 
       int tileValue = gameMap.getTile(checkY, checkX);
 
-      if (tileValue == 0 || tileValue == 2) {
+      if (tileValue == TileType.STONE.id) {
         return i - 1;
       }
 
-      if (tileValue == 3) {
+      if (tileValue == TileType.BRICK.id || tileValue == TileType.GIFT_BOX.id) {
         gameMap.destroyBrick(checkY, checkX);
+        log.debug("Brick destroyed at ({}, {}) tileType={}", checkX, checkY, tileValue);
+        notifyBrickDestroyed(checkX, checkY, tileValue);
         return i;
       }
     }
     return maxPower;
+  }
+
+  private void notifyBrickDestroyed(int tileX, int tileY, int tileType) {
+    if (onBrickDestroyed != null) {
+      onBrickDestroyed.accept(tileX, tileY, tileType);
+    }
   }
 
   private void triggerChainExplosions(Explosion explosion) {
@@ -167,8 +183,8 @@ public class BombManager {
     for (Bomb bomb : bombs) {
       bombRenderer.render(g2d, bomb);
     }
-
-    for (Explosion explosion : explosions) {
+    var copyExplosions = new ArrayList<>(explosions);
+    for (Explosion explosion : copyExplosions) {
       ExplosionRenderer renderer = explosionRenderers.get(explosion);
       if (renderer != null) {
         renderer.render(g2d, explosion);
