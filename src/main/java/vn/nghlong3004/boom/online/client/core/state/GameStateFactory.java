@@ -45,8 +45,7 @@ public final class GameStateFactory {
   }
 
   private static GameState createPlayingState(GamePanel gamePanel) {
-
-    return new PlayingState(gamePanel);
+    return new PlayingState(gamePanel, GameObjectContainer.getGson());
   }
 
   private static GameState createStartState(GamePanel gamePanel) {

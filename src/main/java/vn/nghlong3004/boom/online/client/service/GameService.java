@@ -24,6 +24,10 @@ public interface GameService {
 
   void sendGameEnd(String winnerId, String reason);
 
+  void sendBrickDestroyed(int tileX, int tileY, int tileType);
+
+  void sendItemCollected(String itemId, int tileX, int tileY);
+
   void sendAction(GameActionType type, Object data);
 
   boolean isOnlineMode();

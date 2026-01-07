@@ -22,7 +22,8 @@ public class Explosion {
   private final int centerTileY;
   private final List<ExplosionTile> tiles;
 
-  @Setter private ExplosionState state;
+  @Setter
+  private ExplosionState state;
   private int durationTicks;
 
   public Explosion(
@@ -88,6 +89,14 @@ public class Explosion {
 
   public boolean containsTile(int tileX, int tileY) {
     return tiles.stream().anyMatch(t -> t.tileX() == tileX && t.tileY() == tileY);
+  }
+
+  public List<int[]> getAffectedTiles() {
+    List<int[]> affectedTiles = new ArrayList<>();
+    for (ExplosionTile tile : tiles) {
+      affectedTiles.add(new int[] { tile.tileX(), tile.tileY() });
+    }
+    return affectedTiles;
   }
 
   @FunctionalInterface

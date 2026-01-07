@@ -18,7 +18,9 @@ public class Bomber {
 
   private static final float DEFAULT_SPEED = 0.6f;
   private static final int DEFAULT_LIVES = 1;
-  private static final int INVINCIBILITY_FRAMES = 120; // 2 seconds at 60 FPS
+  private static final int DEFAULT_MAX_BOMBS = 1;
+  private static final int DEFAULT_BOMB_POWER = 1;
+  private static final int INVINCIBILITY_FRAMES = 120;
 
   private final int playerIndex;
   private final Long userId;
@@ -27,14 +29,25 @@ public class Bomber {
 
   private float x;
   private float y;
-  @Builder.Default private float speed = DEFAULT_SPEED;
-  @Builder.Default private Direction direction = Direction.DOWN;
+  @Builder.Default
+  private float speed = DEFAULT_SPEED;
+  @Builder.Default
+  private Direction direction = Direction.DOWN;
 
-  @Builder.Default private BomberState state = BomberState.IDLE;
-  @Builder.Default private int lives = DEFAULT_LIVES;
+  @Builder.Default
+  private BomberState state = BomberState.IDLE;
+  @Builder.Default
+  private int lives = DEFAULT_LIVES;
 
-  @Builder.Default private boolean alive = true;
-  @Builder.Default private int invincibilityTicks = 0;
+  @Builder.Default
+  private boolean alive = true;
+  @Builder.Default
+  private int invincibilityTicks = 0;
+
+  @Builder.Default
+  private int maxBombs = DEFAULT_MAX_BOMBS;
+  @Builder.Default
+  private int bombPower = DEFAULT_BOMB_POWER;
 
   public void move(Direction newDirection) {
     this.direction = newDirection;
