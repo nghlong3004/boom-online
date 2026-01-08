@@ -1,0 +1,2 @@
+ALTER TABLE bomber
+    ALTER COLUMN gender DROP NOT NULL;
