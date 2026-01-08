@@ -1,0 +1,367 @@
+= Boom Battle Document
+Long Nguyen Hoang <nghlong3004@gmail.com>
+v2.0, 2026-01
+:sectnums:
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+:imagesdir: docs/
+
+'''
+
+[small]
+====
+Author: {author} +
+Email: {email} +
+
+Version: {revnumber} ({revdate})
+====
+
+'''
+
+== Introduction
+
+=== About the Game
+
+**Game Boom Battle** được mình mô phỏng lại dựa trên tựa game Boom Online 2D. +
+Khi tham gia trò chơi, người chơi sẽ điều khiển nhân vật bằng các nút di chuyển trên bàn phím.
+Nhiệm vụ của người chơi là nhặt item, né bomb và đặt bomb để tiêu diệt đối thủ (gồm người chơi khác hoặc máy).
+
+NOTE: Mục tiêu của project là để cá nhân mình vận dụng những lý thuyết như **Design Pattern, OOP, SOLID** và giao thức **WebSocket** vào trong thực tế.
+
+=== Demo Game
+
+* ** Welcome **
+
+image::demo/Welcome.jpg[Menu]
+
+* **Login**
+
+image::demo/login.jpg[Login]
+
+* **Register**
+
+image::demo/register.jpg[Register]
+
+* **Forgot Password**
+
+image::demo/forgot-password.jpg[Forgot Password]
+
+* **Resset Password**
+
+image::demo/reset-password.jpg[Resset Password]
+
+* **Playing**
+
+image::demo/playing.jpg[Playing]
+
+* **Menu**
+
+image::demo/menu.jpg[Menu]
+
+* **Setting**
+
+image::demo/setting.jpg[Setting]
+
+* **Lobby**
+
+image::demo/lobby.jpg[Lobby]
+
+* **Room**
+
+image::demo/room.jpg[Room]
+
+* **Play**
+
+image::demo/playing.jpg[Play]
+
+=== Installation
+
+Để trải nghiệm, bạn cần clone 2 repositories dưới đây:
+
+. **Backend:**
++
+[source,bash]
+----
+git clone https://github.com/nghlong3004/boom-battle-server.git
+----
+
+. **Client:**
++
+[source,bash]
+----
+git clone https://github.com/nghlong3004/boom-battle-client.git
+----
+
+Hoặc bạn chỉ cần clone https://github.com/nghlong3004/boom-online-server[Boom Battle Backend] và tải file `.jar` cho client tại https://github.com/nghlong3004/boom-battle-swing/blob/main/out/artifacts/boom_battle_swing_jar/boom-battle-swing.jar[đường dẫn này^].
+
+**Hướng dẫn chạy:**
+
+* **Server:** Tìm và chạy file `BoomBattleServerApplication.java`.
+* **Client:** Tìm và chạy file `BoomBattleClientApplication.java` hoặc mở terminal và gõ:
++
+[source,bash]
+----
+cd out\artifacts\boom_battle_client_jar
+java -jar boom_battle_client_jar
+----
+
+[IMPORTANT]
+====
+Để chạy dự án, máy tính của bạn cần cài đặt **Java 21** trở lên.
+====
+
+== Design for Boom Battle
+
+=== High Level Design
+
+==== System Overview
+
+Game hoạt động theo mô hình Client-Server:
+
+* **Client:** Java Swing (Java 21).
+* **Server:** Spring Boot (4.0.0).
+
+==== Requirements
+
+.Functional Requirements
+[cols="1, 3"]
+|===
+|Function | Short Description
+
+|Connection
+|Kết nối người chơi với server qua WebSocket.
+
+|Disconnection
+|Người chơi ngắt kết nối với Server.
+
+|Create Room
+|Người chơi tạo phòng mới.
+
+|Room List
+|Lấy danh sách các phòng hiện có.
+
+|Join Room
+|Người chơi tham gia vào phòng.
+
+|Leave Room
+|Người chơi rời khỏi phòng.
+
+|Chat Message
+|Người chơi gửi tin nhắn trong phòng chờ.
+
+|Update Map, Skin, Ready
+|Người chơi thay đổi skin, map và trạng thái sẵn sàng.
+
+|Start Game
+|Chủ phòng bắt đầu ván đấu.
+
+|Bomber Action
+|Xử lý hành động di chuyển, đặt bom của người chơi.
+|===
+
+.Non-Functional Requirements
+[cols="1,3"]
+|===
+|Category | Requirement
+
+|Hiệu năng
+|Hệ thống đảm bảo cập nhật `UPS` (Updates Per Second) ổn định trong 1s.
+|===
+
+==== Architecture Overview
+
+image::images/architecture_overview.png[Architecture Overview]
+
+==== Data Flow Diagram
+
+* **Game Flow**:
+
+image::images/game_flow.png[Game Flow]
+
+* **User Flow**:
+
+image::images/user_flow.png[User Flow]
+
+* **Client - Server Flow**:
+
+image::images/client_server_flow.png[Client-Server Flow]
+
+==== Package Overview
+
+.Client Packages
+[cols="1,2"]
+|===
+| Package | Responsibilities
+
+| `WebSocket`
+| Quản lý kết nối WebSocket, nhận/gửi message JSON.
+
+| `AI`
+| Logic đưa ra quyết định cho Bot (Agent).
+
+| `Game.Main`
+| Chứa Game loop, Game Panel, Game Frame, Game Window.
+
+| `Game.Context`
+| Quản lý các State (trạng thái) của game: MENU, ONLINE, OFFLINE, OPTION.
+
+| `Game.Component`
+| Thành phần UI nhỏ của các bối cảnh (Game Over, Win...).
+
+| `Game.Input`
+| Nơi lắng nghe sự kiện Input (Keyboard, Mouse).
+
+| `Game.Manager`
+| Quản lý vòng đời game: Update cái gì, Render cái gì, quản lý dữ liệu gì.
+
+| `Assets`
+| Singleton chứa tài nguyên, đảm bảo chỉ load 1 lần.
+
+| `Model`
+| Chứa Entities, POJO và DTO.
+
+| `Loader`
+| Tải tài nguyên từ đĩa (ảnh, audio, map config).
+
+| `Util`
+| Các hàm tiện ích: check va chạm, xử lý toán học...
+|===
+
+.Server Modules
+[cols="1,2"]
+|===
+| Module | Responsibilities
+
+| `WebSocket`
+| Quản lý session, điều phối message JSON.
+
+| `Controller`
+| Điều hướng request để xử lý data và trả về response cho client.
+
+| `Service`
+| Chứa Business Logic chính.
+
+| `Model`
+| Chứa Entities, POJO và DTO.
+
+| `Configuration`
+| Chứa các class cấu hình Spring Boot/WebSocket.
+|===
+
+== Low Level Design
+
+=== Package Structure
+
+.Client Structure
+[cols="3,5"]
+|===
+|Package | Short Description
+
+|`io.nghlong3004.game.main`
+| Thành phần khởi tạo (`GamePanel`, `GameFrame`, `GameWindow`), vòng lặp chính (`GameLoop`).
+
+|`io.nghlong3004.game.context`
+| Context holder: `GameContext`. Các state con nằm trong `state/`.
+
+|`io.nghlong3004.game.manager`
+| Facade Pattern: `GameManager` quản lý các Sub-managers (Map, Bomber, Bomb, Explosion, Item, Agent, Timer, Render, Network).
+
+|`io.nghlong3004.model.entities`
+| Thực thể gameplay (`Bomber`, `Bomb`, `Explosion`, `Item`).
+
+|`io.nghlong3004.loader`
+| Load tài nguyên: Ảnh, âm thanh, map file, object config.
+
+|`io.nghlong3004.constant`
+| Hằng số: Tile size, FPS, Asset paths, Screen dimensions.
+
+|`io.nghlong3004.configuration`
+| Các class cấu hình chung.
+
+|`io.nghlong3004.websocket`
+| Client WebSocket implementation (`BomberWebSocketClient`, `MessageHandler`).
+
+|`io.nghlong3004.model.request` / `.response`
+| DTO dùng để send/receive qua mạng.
+
+|`io.nghlong3004.util`
+| Utilities: Check va chạm (Collision), xử lý Audio.
+
+|`io.nghlong3004.ai`
+| Logic điều hướng cho Agent (Bot).
+|===
+
+.Server Structure
+[cols="3,5"]
+|===
+|Package | Short Description
+
+|`io.nghlong3004.boombattlebackend.configuration`
+| Config WebSocket (`WebSocketConfiguration`), Application Context (`ApplicationConfiguration`).
+
+|`io.nghlong3004.boombattlebackend.controller`
+| `BomberController`: Điều phối tới BomberService. +
+`RoomController`: Điều phối tới RoomService.
+
+|`io.nghlong3004.boombattlebackend.service`
+| `BomberService`: Xử lý connect/disconnect, quản lý WebSocketSession. +
+`RoomService`: Logic phòng (Create, Join, Leave). +
+`GameMapService`: Đọc map JSON, random Item spawn.
+
+|`io.nghlong3004.boombattlebackend.websocket`
+| `GameWebSocket`: Handler message thô. +
+`GameWebSocketManager`: Routing message tới Controller tương ứng.
+
+|`io.nghlong3004.boombattlebackend.model.game`
+| Các entities logic game phía server.
+
+|`io.nghlong3004.boombattlebackend.model.request`
+| DTO nhận request từ Client.
+
+|`io.nghlong3004.boombattlebackend.model.response`
+| DTO trả response về Client.
+|===
+
+=== Class Design Highlights
+
+* **UI Flow:** `BoomBattleSwing.main()` -> `Game.run()`.
+* **Initialization:** `AudioLoader` -> `GameManager` -> `NetworkManager` -> `GameContext` -> `GamePanel` -> `GameLoop`.
+* **State Pattern:** `GameContext` giữ một `EnumMap<GameStateType, GameState>`.
+Các hàm `update`, `render`, `input` sẽ được chuyển tiếp (forward) tới `currentState`.
+* **Manager Facade (`GameManager`):** Đứng ra quản lý toàn bộ vòng đời ván game:
+** `MapManager`: Load map, check vị trí spawn.
+** `Entity Managers`: `BomberManager`, `BombManager`, `ExplosionManager`, `ItemManager` (Update & Render).
+** `AgentManager`: Update Bot.
+** `GameTimer`: Đồng bộ thời gian.
+* **Entity Hierarchy:** Base `Entity` (x, y, w, h, alive...) -> `Bomber` (thêm bomb slots, range, speed, animation...).
+
+=== WebSocket Protocol Detail
+
+* **Message Types (`MessageType` enum):**
+** Lifecycle: `CONNECT`, `DISCONNECT`.
+** Room: `CREATE_ROOM`, `JOIN_ROOM`, `LEAVE_ROOM`, `ROOM_LIST`, `ROOM_UPDATE`, `START_GAME`.
+** Gameplay: `BOMBER_ACTION`, `GAME_STATE_UPDATE`.
+** Attributes: `UPDATE_READY`, `UPDATE_SKIN`, `UPDATE_MAP`.
+** Chat: `CHAT_MESSAGE`.
+* **Flow điển hình:**
+. Client gửi `CREATE_ROOM`.
+. Server trả về `ROOM_UPDATE` cho chủ phòng & broadcast `ROOM_LIST` cho người khác.
+. Chủ phòng nhấn Start -> Server gửi `START_GAME` (kèm Map Data & Item Spawns).
+. Client chuyển sang màn hình `playOnline()`.
+. Khi chơi: Client gửi `BOMBER_ACTION` -> Server broadcast lại cho các client khác update vị trí.
+
+=== Game Loop Detail
+
+* **Timing:** Dựa trên `FPS` và `UPS` (trong `GameConstant`).
+* **Logic:**
+** `updateTimer()`: Tính toán thời gian trôi qua (delta time).
+** `processUpdate()`: Chạy logic game khi `updateDelta >= 1`.
+** `processRender()`: Vẽ lại màn hình khi `frameDelta >= 1`.
+** `displayFPSandUPS()`: Monitor hiệu năng.
+
+=== Map & Collision Handling
+
+* **Map Loading:** `MapLoader` parse file text/json thành mảng 2 chiều `int[][]`.
+* **Asset Tile:** Cắt tileset thành các sprite nhỏ dựa trên `TILE_SIZE`.
+* **Collision:** Chuyển đổi tọa độ Pixel sang tọa độ Grid (Lưới) để kiểm tra va chạm với tường (`SOLID_WALL`) hoặc gạch (`SOFT_WALL`).
