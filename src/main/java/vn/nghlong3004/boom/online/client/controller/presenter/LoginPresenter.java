@@ -13,6 +13,7 @@ import vn.nghlong3004.boom.online.client.model.User;
 import vn.nghlong3004.boom.online.client.model.request.LoginRequest;
 import vn.nghlong3004.boom.online.client.model.response.ErrorResponse;
 import vn.nghlong3004.boom.online.client.model.response.LoginResponse;
+import vn.nghlong3004.boom.online.client.service.AuthService;
 import vn.nghlong3004.boom.online.client.service.HttpService;
 import vn.nghlong3004.boom.online.client.session.ApplicationSession;
 import vn.nghlong3004.boom.online.client.session.UserSession;
@@ -29,6 +30,7 @@ public class LoginPresenter {
 
   private final LoginPanel view;
   private final HttpService httpService;
+  private final AuthService authService;
   private final Gson gson;
 
   public void handleLogin() {
@@ -106,7 +108,24 @@ public class LoginPresenter {
   }
 
   public void onGoogleLoginClicked() {
-    view.showInfo("common.feature.upcoming");
+    view.showLoading(true);
+    view.showInfo("login.google.opening_browser");
+
+    authService.loginWithGoogle(
+        loginResponse -> {
+          view.showLoading(false);
+          UserSession.getInstance()
+              .setSession(
+                  loginResponse.accessToken(), loginResponse.refreshToken(), loginResponse.user());
+          ApplicationSession.getInstance().setOfflineMode(false);
+          view.showSuccess("login.msg.success");
+          view.closeLoginModal();
+          GameContext.getInstance().next();
+        },
+        error -> {
+          view.showLoading(false);
+          view.showError("login.google.failed");
+        });
   }
 
   public void setAccount(String email, String password) {

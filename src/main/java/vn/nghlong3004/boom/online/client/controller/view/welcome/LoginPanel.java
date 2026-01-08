@@ -14,6 +14,7 @@ import vn.nghlong3004.boom.online.client.constant.ImageConstant;
 import vn.nghlong3004.boom.online.client.controller.presenter.LoginPresenter;
 import vn.nghlong3004.boom.online.client.controller.view.CustomModalBorder;
 import vn.nghlong3004.boom.online.client.controller.view.component.ButtonLink;
+import vn.nghlong3004.boom.online.client.service.AuthService;
 import vn.nghlong3004.boom.online.client.service.HttpService;
 import vn.nghlong3004.boom.online.client.session.ApplicationSession;
 import vn.nghlong3004.boom.online.client.util.I18NUtil;
@@ -36,8 +37,8 @@ public class LoginPanel extends FormPanel {
   @Setter private CustomModalBorder registerPanel;
   @Setter private CustomModalBorder forgotPasswordPanel;
 
-  public LoginPanel(HttpService httpService, Gson gson) {
-    this.presenter = new LoginPresenter(this, httpService, gson);
+  public LoginPanel(HttpService httpService, AuthService authService, Gson gson) {
+    this.presenter = new LoginPresenter(this, httpService, authService, gson);
 
     setLayout(new MigLayout("al center center"));
     createLogin();

@@ -21,6 +21,7 @@ import vn.nghlong3004.boom.online.client.controller.view.welcome.RegisterPanel;
 import vn.nghlong3004.boom.online.client.controller.view.welcome.ResetPasswordPanel;
 import vn.nghlong3004.boom.online.client.core.GameObjectContainer;
 import vn.nghlong3004.boom.online.client.core.GamePanel;
+import vn.nghlong3004.boom.online.client.service.AuthService;
 import vn.nghlong3004.boom.online.client.service.HttpService;
 import vn.nghlong3004.boom.online.client.util.I18NUtil;
 import vn.nghlong3004.boom.online.client.util.ImageUtil;
@@ -91,9 +92,10 @@ public final class GameStateFactory {
   private static GameState createWelcomeState(GamePanel gamePanel) {
     Option option = createOption();
     HttpService httpService = GameObjectContainer.getHttpService();
+    AuthService authService = GameObjectContainer.getAuthService();
     Gson gson = GameObjectContainer.getGson();
 
-    LoginPanel login = new LoginPanel(httpService, gson);
+    LoginPanel login = new LoginPanel(httpService, authService, gson);
     ForgotPasswordPanel forgotPassword = new ForgotPasswordPanel(httpService, gson);
     RegisterPanel register = new RegisterPanel(httpService, gson, login.getPresenter());
     ResetPasswordPanel resetPassword =
