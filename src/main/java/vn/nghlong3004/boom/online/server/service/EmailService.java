@@ -1,7 +1,7 @@
 package vn.nghlong3004.boom.online.server.service;
 
 import java.util.Map;
-import vn.nghlong3004.boom.online.server.email.EmailType;
+import vn.nghlong3004.boom.online.server.email.TemplateType;
 
 /**
  * Project: boom-online-server
@@ -10,5 +10,5 @@ import vn.nghlong3004.boom.online.server.email.EmailType;
  * @since 12/9/2025
  */
 public interface EmailService {
-  void sendHtmlEmail(String to, String lang, EmailType type, Map<String, String> data);
+  void sendHtmlEmail(String to, String lang, TemplateType type, Map<String, String> data);
 }

@@ -12,8 +12,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import vn.nghlong3004.boom.online.server.constant.LocaleConstant;
-import vn.nghlong3004.boom.online.server.email.EmailLocaleStrategy;
-import vn.nghlong3004.boom.online.server.email.EmailType;
+import vn.nghlong3004.boom.online.server.email.LocaleStrategy;
+import vn.nghlong3004.boom.online.server.email.TemplateType;
 import vn.nghlong3004.boom.online.server.service.EmailService;
 
 /**
@@ -28,16 +28,17 @@ import vn.nghlong3004.boom.online.server.service.EmailService;
 public class EmailServiceImpl implements EmailService {
 
   private final JavaMailSender mailSender;
-  private final Map<String, EmailLocaleStrategy> emailStrategies;
+  private final Map<String, LocaleStrategy> emailStrategies;
 
   @Value("${spring.mail.username}")
   private String fromEmail;
 
   @Override
   @Async
-  public void sendHtmlEmail(String toEmail, String lang, EmailType type, Map<String, String> data) {
+  public void sendHtmlEmail(
+      String toEmail, String lang, TemplateType type, Map<String, String> data) {
     try {
-      EmailLocaleStrategy strategy =
+      LocaleStrategy strategy =
           emailStrategies.getOrDefault(lang, emailStrategies.get(LocaleConstant.VIETNAMESE));
 
       String subject = strategy.getSubject(type);

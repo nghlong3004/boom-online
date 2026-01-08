@@ -1,0 +1,2 @@
+ALTER TABLE bomber
+    ALTER COLUMN birthday DROP NOT NULL;

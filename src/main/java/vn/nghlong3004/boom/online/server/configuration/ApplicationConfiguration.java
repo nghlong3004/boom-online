@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import vn.nghlong3004.boom.online.server.email.EmailLocaleStrategy;
+import org.springframework.web.client.RestTemplate;
+import vn.nghlong3004.boom.online.server.email.LocaleStrategy;
 import vn.nghlong3004.boom.online.server.model.GameState;
 
 /**
@@ -50,8 +51,13 @@ public class ApplicationConfiguration {
   }
 
   @Bean
-  public Map<String, EmailLocaleStrategy> emailStrategies(List<EmailLocaleStrategy> strategies) {
+  public Map<String, LocaleStrategy> emailStrategies(List<LocaleStrategy> strategies) {
     return strategies.stream()
-        .collect(Collectors.toMap(EmailLocaleStrategy::getSupportedLanguage, Function.identity()));
+        .collect(Collectors.toMap(LocaleStrategy::getSupportedLanguage, Function.identity()));
+  }
+
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
   }
 }

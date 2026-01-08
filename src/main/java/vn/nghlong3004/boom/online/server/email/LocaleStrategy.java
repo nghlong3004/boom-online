@@ -6,10 +6,10 @@ package vn.nghlong3004.boom.online.server.email;
  * @author nghlong3004
  * @since 12/9/2025
  */
-public interface EmailLocaleStrategy {
+public interface LocaleStrategy {
   String getSupportedLanguage();
 
-  String getSubject(EmailType type);
+  String getSubject(TemplateType type);
 
-  String getTemplatePath(EmailType type);
+  String getTemplatePath(TemplateType type);
 }

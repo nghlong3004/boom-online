@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.nghlong3004.boom.online.server.email.EmailType;
+import vn.nghlong3004.boom.online.server.email.TemplateType;
 import vn.nghlong3004.boom.online.server.exception.ErrorCode;
 import vn.nghlong3004.boom.online.server.exception.ResourceException;
 import vn.nghlong3004.boom.online.server.mapper.UserMapper;
@@ -104,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
     Map<String, String> data = new HashMap<>();
     data.put("FULL_NAME", user.getDisplayName());
     data.put("OTP_CODE", otp);
-    emailService.sendHtmlEmail(request.email(), request.lang(), EmailType.OTP, data);
+    emailService.sendHtmlEmail(request.email(), request.lang(), TemplateType.OTP, data);
   }
 
   @Override
@@ -128,6 +128,6 @@ public class AuthServiceImpl implements AuthService {
 
     Map<String, String> data = new HashMap<>();
     data.put("FULL_NAME", user.getDisplayName());
-    emailService.sendHtmlEmail(request.email(), request.lang(), EmailType.RESET_SUCCESS, data);
+    emailService.sendHtmlEmail(request.email(), request.lang(), TemplateType.RESET_SUCCESS, data);
   }
 }

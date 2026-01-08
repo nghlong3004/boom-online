@@ -6,9 +6,12 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.nghlong3004.boom.online.server.model.request.*;
+import vn.nghlong3004.boom.online.server.model.response.GoogleOAuthInitResponse;
+import vn.nghlong3004.boom.online.server.model.response.GoogleOAuthStatusResponse;
 import vn.nghlong3004.boom.online.server.model.response.LoginResponse;
 import vn.nghlong3004.boom.online.server.model.response.OTPResponse;
 import vn.nghlong3004.boom.online.server.service.AuthService;
+import vn.nghlong3004.boom.online.server.service.GoogleOAuthService;
 
 /**
  * Project: boom-online-server
@@ -22,6 +25,7 @@ import vn.nghlong3004.boom.online.server.service.AuthService;
 public class AuthController {
 
   private final AuthService authService;
+  private final GoogleOAuthService googleOAuthService;
 
   @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
@@ -51,5 +55,37 @@ public class AuthController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void resetPassword(@Validated @RequestBody ResetPasswordRequest request) {
     authService.resetPassword(request);
+  }
+
+  @PostMapping("/google/init")
+  @ResponseStatus(HttpStatus.OK)
+  public GoogleOAuthInitResponse initGoogleAuth() {
+    return googleOAuthService.initializeAuth();
+  }
+
+  @GetMapping("/google/callback")
+  public String handleGoogleCallback(@RequestParam String code, @RequestParam String state) {
+
+    googleOAuthService.handleCallback(code, state);
+
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head><title>Login Success</title></head>
+        <body style="font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);">
+          <div style="text-align:center;background:white;padding:40px 60px;border-radius:16px;">
+            <div style="font-size:64px;color:#4CAF50;">✓</div>
+            <h1>Đăng nhập thành công!</h1>
+            <p>Bạn có thể đóng tab này.</p>
+          </div>
+        </body>
+        </html>
+        """;
+  }
+
+  @GetMapping("/google/status")
+  @ResponseStatus(HttpStatus.OK)
+  public GoogleOAuthStatusResponse checkGoogleStatus(@RequestParam String sessionId) {
+    return googleOAuthService.checkStatus(sessionId);
   }
 }

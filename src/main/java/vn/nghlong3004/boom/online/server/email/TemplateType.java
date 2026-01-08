@@ -6,8 +6,9 @@ package vn.nghlong3004.boom.online.server.email;
  * @author nghlong3004
  * @since 12/9/2025
  */
-public enum EmailType {
+public enum TemplateType {
   OTP,
   WELCOME,
-  RESET_SUCCESS
+  RESET_SUCCESS,
+  LOGIN_OAUTH2
 }

@@ -29,6 +29,8 @@ public final class LocaleConstant {
   public static final String RESET_SUCCESS_SUBJECT_EN =
       "Security Alert: Password Changed Successfully";
 
+  public static final String LOGIN_OAUTH2 = "templates/login-with-oauth2-vi.html";
+
   private LocaleConstant() {
     throw new UnsupportedOperationException("No instantiation");
   }

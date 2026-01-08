@@ -10,7 +10,7 @@ import vn.nghlong3004.boom.online.server.constant.LocaleConstant;
  * @since 12/9/2025
  */
 @Service
-public class VietnameseEmailStrategy implements EmailLocaleStrategy {
+public class VietnameseLocaleStrategy implements LocaleStrategy {
 
   @Override
   public String getSupportedLanguage() {
@@ -18,20 +18,22 @@ public class VietnameseEmailStrategy implements EmailLocaleStrategy {
   }
 
   @Override
-  public String getSubject(EmailType type) {
+  public String getSubject(TemplateType type) {
     return switch (type) {
       case OTP -> LocaleConstant.OTP_SUBJECT_VI;
       case WELCOME -> LocaleConstant.WELCOME_SUBJECT_VI;
       case RESET_SUCCESS -> LocaleConstant.RESET_SUCCESS_SUBJECT_VI;
+      case LOGIN_OAUTH2 -> LocaleConstant.LOGIN_OAUTH2;
     };
   }
 
   @Override
-  public String getTemplatePath(EmailType type) {
+  public String getTemplatePath(TemplateType type) {
     return switch (type) {
       case OTP -> LocaleConstant.OTP_TEMPLATE_VI;
       case WELCOME -> LocaleConstant.WELCOME_TEMPLATE_VI;
       case RESET_SUCCESS -> LocaleConstant.RESET_SUCCESS_TEMPLATE_VI;
+      case LOGIN_OAUTH2 -> null;
     };
   }
 }
