@@ -1,0 +1,17 @@
+package vn.nghlong3004.boom.online.server.repository;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import vn.nghlong3004.boom.online.server.model.OTP;
+
+/**
+ * Project: boom-online-server
+ *
+ * @author nghlong3004
+ * @since 12/9/2025
+ */
+@Repository
+public interface OTPRepository extends JpaRepository<OTP, Long> {
+  Optional<OTP> findOTPByEmail(String email);
+}

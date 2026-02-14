@@ -1,0 +1,8 @@
+CREATE TABLE otp
+(
+    id          BIGSERIAL PRIMARY KEY,
+    email       VARCHAR(255) NOT NULL,
+    code        VARCHAR(255) NOT NULL,
+    expiry_time TIMESTAMP WITH TIME ZONE,
+    created     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

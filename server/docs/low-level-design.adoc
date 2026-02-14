@@ -1,0 +1,215 @@
+= Low Level Design
+Long Nguyen Hoang <nghlong3004@gmail.com>
+v2.0, 2025-12
+:sectnums:
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+'''
+
+[small]
+====
+Author: {author} +
+Email: {email} +
+
+Version: {revnumber} ({revdate})
+====
+
+== Overview
+
+Tài liệu này mô tả chi tiết thiết kế mức thấp (Class, Method, Logic) cho Backend Server của dự án Boom Online 2. Server chịu trách nhiệm quản lý xác thực người dùng, lưu trữ dữ liệu và xử lý logic trò chơi thời gian thực (Real-time Game Logic).
+
+* **Tech Stack:** Java 21+, Spring Boot 4.0.0, Spring WebSocket, Spring Data JPA, PostgreSQL.
+* **Architecture Style:** Layered Architecture, Event-Driven.
+
+== Tổ chức thư mục (Package Structure)
+
+Cấu trúc source code dự kiến trong thư mục `src/main/java/com/boom/server`:
+
+[source,text]
+----
+com.boom.server
+├── config              # Cấu hình (Security, WebSocket, Async)
+├── controller          # REST API Controllers (Auth, User)
+├── model               # Hibernate Entities (Mapping DB)
+├── repository          # JPA Interfaces
+├── security            # JWT handling, Custom UserDetails
+├── service             # Business Logic (User management, Shop)
+├── game                # CORE GAME ENGINE
+│   ├── core            # Logic ván chơi (Room, Bomb, Map)
+│   ├── handler         # WebSocket Handlers
+│   ├── manager         # Quản lý danh sách phòng (Singleton)
+│   └── packet          # DTOs cho WebSocket (JSON Payloads)
+└── utils               # Các hàm tiện ích (Math, Validation)
+----
+
+== Entities
+
+Ánh xạ trực tiếp từ Database PostgreSQL sang Java Classes.
+
+=== User Entity
+Lớp đại diện cho người chơi.
+
+[source,java]
+----
+import jakarta.persistence.Column;
+import java.sql.Timestamp;
+@Entity
+@Table(name = "bomber")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(unique = true)
+    private String email;
+    @Column(name = "password_hash")
+    private String passwordHash;
+    @Column(name = "full_name")
+    private String fullName;
+    private String birthday;
+    private Integer gender;
+    private Timestamp created;
+    private Timestamp updated;
+}
+----
+
+
+== In-Memory
+
+=== Class Diagram (Mermaid)
+=== Chi tiết Classes
+
+==== RoomManager (Singleton)
+Dùng để quản lý vòng đời của tất cả các phòng chơi.
+
+* **Nhiệm vụ:** Tạo phòng, xóa phòng.
+* **Thread Safety:** Sử dụng `ConcurrentHashMap` để lưu danh sách phòng.
+
+[source,java]
+----
+@Component
+public class RoomManager {
+    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
+
+    public Room createRoom(User host) {
+        String roomId = UUID.randomUUID().toString();
+        Room room = new Room(roomId);
+        rooms.put(roomId, room);
+        return room;
+    }
+
+    public void removeRoom(String roomId) {
+        rooms.remove(roomId);
+    }
+}
+----
+
+==== Room
+
+[source,java]
+----
+public class Room {
+    private String id;
+    private MapType mapType;
+    private ConcurrentHashMap<String, User> users;
+
+}
+----
+
+== Communication
+
+=== GameWebSocketHandler
+Lớp nhận raw message từ Client.
+
+[source,java]
+----
+import lombok.RequiredArgsConstructor;
+@RequiredArgsConstructor
+public class GameWebSocketHandler extends TextWebSocketHandler {
+
+    private RoomManager roomManager;
+
+    @Override
+    public void handleTextMessage(WebSocketSession session, TextMessage message) {
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+
+    }
+}
+----
+
+=== Packet Structure (DTOs)
+Sử dụng các lớp POJO để map JSON.
+
+* **Server -> Client:**
+
+[source, java]
+----
+public record TextMessageRequest(
+        @NonNull
+        String roomId,
+        @NonNull
+        String owner,
+        @NonNull
+        String content
+) {}
+----
+[source, java]
+----
+
+public record BomberActionRequest(
+        @NonNull
+        String userId,
+        @NonNull
+        Integer keyCode,
+        @NonNull
+        Boolean isReleased
+) {}
+----
+
+[source, java]
+----
+@Builder
+public record CreateRoomRequest(
+        @NonNull
+        String owner,
+        @NonNull
+        String ownerName,
+        @NonNull
+        String name,
+        @NonNull
+        Integer maxUser,
+        @NonNull
+        MapType mapType,
+        @NonNull
+        SkinType skinType
+) {}
+----
+
+[source, java]
+----
+public record JoinRoomRequest(
+        @NonNull
+        String id,
+        @NonNull
+        UserInfo userInfo
+) {}
+----
+
+[source, java]
+----
+public record StartGameRequest(MapType mapType) {}
+----
+== Bảo mật & Xác thực (Security)
+
+=== JWT Authentication Flow
+1. **Login:** Client POST `/api/auth/login` -> Server trả về `JWT String`.
+2. **WebSocket Connect:** Client connect `ws://localhost/game?token={JWT}`.
+3. **HandshakeInterceptor:**
+* Chặn request trước khi upgrade protocol.
+* Parse `token` từ URL query params.
+* Validate token -> Lấy `userId`.
+* Lưu `userId` vào `WebSocketSession.getAttributes()`.
